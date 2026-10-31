@@ -18,7 +18,7 @@
 @media(max-width:700px){#collection{display:none}#albumGrid{gap:7px}.albumPanel{padding:18px}.albumThumb{height:60px;width:60px}.albumItem{padding:7px 3px}}
 @media(max-width:700px){#top{padding:13px 12px}.pill{padding:7px 9px;min-width:65px}.pill strong{font-size:16px}.wordmark{font-size:18px}.eyebrow{font-size:8px}#photos{display:none}.how{display:none}#bottom{bottom:calc(12px + env(safe-area-inset-bottom,0px))}.ctrl{font-size:12px;padding:10px 13px}}
 </style></head><body><canvas id="scene" aria-label="NYC Memories merge-spil"></canvas><div id="app">
-<header id="top"><div><div class="wordmark">NYC <span>MEMORIES</span></div><div class="eyebrow">FAMILY MERGE · NEW YORK 2026</div></div><div class="scorebar"><div class="pill"><small>POINT</small><strong id="score">0</strong></div><div class="pill"><small>REKORD</small><strong id="best">0</strong></div></div></header>
+<header id="top"><div><div class="wordmark">NYC <span>MEMORIES</span></div><div class="eyebrow">FAMILY MERGE · NEW YORK 2026</div><div id="nycStage" style="color:#ffe2b9;font-size:10px;font-weight:900;letter-spacing:.13em;margin-top:9px">MORGEN · BROOKLYN</div></div><div class="scorebar"><div class="pill"><small>POINT</small><strong id="score">0</strong></div><div class="pill"><small>REKORD</small><strong id="best">0</strong></div></div></header>
 <div id="notice">FANTASTISK MERGE!</div><div id="collection"><div class="label">SAMLING</div><div class="memory" id="topMemory">Pancakes</div><div class="track"><i id="collectionTrack"></i></div><div class="subtext" id="collectionCount">1 af 8 minder opdaget</div></div><div id="photos"><b>Jeres New York-eventyr</b>Brikkerne bygger på motiver fra jeres feriebilleder: metro, skyline, morgenmad, familie og byens ikoner.</div>
 <footer id="bottom"><button id="restart" class="ctrl">↻ Nyt spil</button><p class="how">Flyt musen eller fingeren · Klik/tap for at slippe · Match to ens motiver</p><button id="openAlbum" class="ctrl" aria-label="Åbn fotoalbum">▦ Album</button><button id="pause" class="ctrl" aria-label="Pause eller fortsæt spil">Ⅱ Pause</button><label class="ctrl" style="display:flex;align-items:center;gap:6px" for="volume">Vol <input id="volume" type="range" min="0" max="100" value="75" aria-label="Musiklydstyrke"></label><button id="music" class="ctrl" aria-label="Slå baggrundsmusik til eller fra" aria-pressed="true" title="Baggrundsmusik">♫ Musik</button><button id="mute" class="ctrl" aria-label="Slå lydeffekter til eller fra" aria-pressed="true" title="Lydeffekter">♪ FX</button></footer><div id="soundStatus" role="status" aria-live="polite"></div>
 <div id="album" class="hidden"><div class="albumPanel"><h2>Jeres New York-album</h2><p>Saml to ens ferieminder for at låse næste billede op. Hvert motiv kommer fra jeres egne feriefotos.</p><div id="albumGrid"></div><button class="primary" id="closeAlbum">TILBAGE TIL SPILLET</button></div></div>
@@ -95,9 +95,99 @@ let threatened=bodies.some(b=>b.age>2&&b.y-b.r<arena.y+14&&Math.abs(b.vy)<80);da
 for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=350*dt;if(p.life<=0)particles.splice(i,1)}
 }
 function roundRect(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
-function backgroundArt(){const gr=ctx.createLinearGradient(0,0,0,ch);gr.addColorStop(0,'#142e4d');gr.addColorStop(.55,'#244d67');gr.addColorStop(1,'#0b2138');ctx.fillStyle=gr;ctx.fillRect(0,0,cw,ch);const sun=ctx.createRadialGradient(cw*.75,ch*.24,4,cw*.75,ch*.24,ch*.65);sun.addColorStop(0,'#ffb99060');sun.addColorStop(1,'#ffb99000');ctx.fillStyle=sun;ctx.fillRect(0,0,cw,ch);ctx.fillStyle='#1a354d';for(let i=0;i<60;i++){const w=19+i%4*13,x=i*(cw/52)-12,ht=60+(i*47)%145;ctx.fillRect(x,ch-ht-45,w,ht+80);ctx.fillStyle='#ffffff10';for(let wy=ch-ht-35;wy<ch-30;wy+=14)for(let wx=x+4;wx<x+w-2;wx+=9)if((wx+wy+i)%3<1)ctx.fillRect(wx,wy,3,5);ctx.fillStyle='#1a354d'}ctx.fillStyle='#091a2a8c';ctx.fillRect(0,ch-60,cw,60)}
+
+const NYC_SCENES=[
+ {label:'MORGEN · BROOKLYN',top:'#7faed7',middle:'#d5dfda',bottom:'#ffcb9d',far:'#7995ab',mid:'#506f89',near:'#2d4a68',windows:'#ecf6ff',lights:.09,stars:0},
+ {label:'DAG · MANHATTAN',top:'#468fc9',middle:'#9fcce6',bottom:'#e9d8ad',far:'#688ba8',mid:'#456786',near:'#284762',windows:'#d9f2ff',lights:.19,stars:0},
+ {label:'SOLNEDGANG · HUDSON',top:'#493e80',middle:'#c46a8a',bottom:'#ffc184',far:'#826a8d',mid:'#584965',near:'#322a4b',windows:'#ffd9aa',lights:.55,stars:.12},
+ {label:'NAT · TIMES SQUARE',top:'#08152d',middle:'#1a2e52',bottom:'#49416a',far:'#344664',mid:'#21304c',near:'#131f39',windows:'#ffe19a',lights:.97,stars:1}
+];
+const NYC_THRESHOLDS=[0,800,2200,5000];
+let bgScene=0,bgBlend=0,bgShown=-1;
+function nycMix(a,b,t){return a+(b-a)*t}
+function nycRGB(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255]}
+function nycColor(a,b,t){const x=nycRGB(a),y=nycRGB(b);return 'rgb('+x.map((v,i)=>Math.round(nycMix(v,y[i],t))).join(',')+')'}
+function nycPalette(){
+ const desired=score<800?0:score<2200?1:score<5000?2:3;
+ // Animate toward the new stage, rather than abruptly replacing the entire scene.
+ bgScene+=(desired-bgScene)*Math.min(.07,Math.max(.008,1/80));
+ if(Math.abs(desired-bgScene)<.004)bgScene=desired;
+ const low=Math.floor(bgScene),high=Math.min(3,low+1),t=bgScene-low;
+ const p=NYC_SCENES[low],q=NYC_SCENES[high],r={};
+ for(const key of ['top','middle','bottom','far','mid','near','windows'])r[key]=nycColor(p[key],q[key],t);
+ for(const key of ['lights','stars'])r[key]=nycMix(p[key],q[key],t);
+ if(desired!==bgShown){bgShown=desired;const label=document.getElementById('nycStage');if(label)label.textContent=NYC_SCENES[desired].label}
+ return r;
+}
+function nycBuilding(x,base,w,h,color,windowColor,lit,seed){
+ ctx.fillStyle=color;ctx.fillRect(x,base-h,w,h);
+ ctx.fillStyle=windowColor;
+ for(let row=0;row<Math.floor((h-12)/15);row++)for(let col=0;col<Math.floor((w-8)/11);col++){
+ const n=Math.sin((seed+col*19+row*23)*73.89)*43758.5453;
+ if(n-Math.floor(n)<.35+lit*.36)continue;
+ ctx.globalAlpha=.17+lit*.74;
+ ctx.fillRect(x+7+col*11,base-h+10+row*15,4,6)
+ }
+ ctx.globalAlpha=1
+}
+function nycEmpire(x,base,h,color,lit,windowColor){
+ const w=h*.18;
+ nycBuilding(x-w/2,base,w,h,color,windowColor,lit,91);
+ ctx.fillStyle=color;
+ ctx.fillRect(x-w*.33,base-h-h*.14,w*.66,h*.14);
+ ctx.fillRect(x-w*.13,base-h-h*.24,w*.26,h*.10);
+ ctx.fillStyle=windowColor;
+ ctx.globalAlpha=.42+lit*.5;
+ ctx.fillRect(x-2,base-h-h*.42,4,h*.2);
+ ctx.globalAlpha=1
+}
+function nycBridge(y,color){
+ ctx.strokeStyle=color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cw,y);ctx.stroke();
+ const left=cw*.16,right=cw*.37;
+ ctx.fillStyle=color;ctx.fillRect(left,y-66,17,66);ctx.fillRect(right,y-66,17,66);
+ ctx.lineWidth=1.6;
+ for(let i=0;i<=20;i++){let x=left+(right-left)*i/20;let sag=12+24*Math.sin(Math.PI*i/20);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-66+sag);ctx.stroke()}
+ ctx.beginPath();ctx.moveTo(0,y-14);ctx.quadraticCurveTo(left,y+18,left+8,y-55);ctx.quadraticCurveTo((left+right)/2,y-2,right+8,y-55);ctx.quadraticCurveTo(cw*.6,y+18,cw,y-20);ctx.stroke()
+}
+function nycStatue(x,y,color){
+ ctx.fillStyle=color;ctx.fillRect(x-15,y-10,30,10);
+ ctx.beginPath();ctx.moveTo(x-9,y-10);ctx.lineTo(x-6,y-56);ctx.lineTo(x+6,y-56);ctx.lineTo(x+10,y-10);ctx.fill();
+ ctx.beginPath();ctx.arc(x,y-63,9,0,Math.PI*2);ctx.fill();
+ ctx.save();ctx.translate(x+6,y-58);ctx.rotate(-.22);ctx.fillRect(0,-34,5,37);ctx.restore();
+ ctx.beginPath();ctx.moveTo(x+6,y-95);ctx.lineTo(x+13,y-83);ctx.lineTo(x,y-83);ctx.fill()
+}
+function backgroundArt(){
+ const p=nycPalette(),gr=ctx.createLinearGradient(0,0,0,ch);
+ gr.addColorStop(0,p.top);gr.addColorStop(.58,p.middle);gr.addColorStop(1,p.bottom);
+ ctx.fillStyle=gr;ctx.fillRect(0,0,cw,ch);
+ const sunX=cw*.78,sunY=ch*.24;
+ const halo=ctx.createRadialGradient(sunX,sunY,3,sunX,sunY,ch*.46);
+ halo.addColorStop(0,'rgba(255,218,165,.57)');halo.addColorStop(1,'rgba(255,218,165,0)');
+ ctx.fillStyle=halo;ctx.fillRect(0,0,cw,ch);
+ ctx.fillStyle=nycColor('#fff0c6','#d5e8fb',p.stars);
+ ctx.globalAlpha=1-p.stars*.45;ctx.beginPath();ctx.arc(sunX,sunY,p.stars>.5?23:38,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ if(p.stars){ctx.fillStyle='#fff';for(let i=0;i<90;i++){const x=(i*97+13)%Math.max(1,cw),y=(i*59+17)%Math.max(1,ch*.55);ctx.globalAlpha=p.stars*(.25+.55*Math.pow(Math.sin(elapsed*1.3+i),2));ctx.fillRect(x,y,(i%4===0?2:1),1)}ctx.globalAlpha=1}
+ // The harbor, Brooklyn Bridge, and three layers of Manhattan silhouettes.
+ const river=ctx.createLinearGradient(0,ch*.65,0,ch);
+ river.addColorStop(0,nycColor('#749bb8','#142a52',p.stars));river.addColorStop(1,p.near);
+ ctx.fillStyle=river;ctx.fillRect(0,ch*.66,cw,ch*.34);
+ for(let layer=0;layer<3;layer++){
+ const base=ch*(.70+layer*.115),color=[p.far,p.mid,p.near][layer],count=Math.ceil(cw/(layer===0?53:layer===1?59:68))+2;
+ for(let i=0;i<count;i++){const w=28+((i*37+layer*23)%43),h=(layer===0?70:layer===1?105:130)+((i*53+layer*97)%125);
+ const x=i*(cw/count)-8;nycBuilding(x,base,w,h,color,p.windows,p.lights*(layer===0?.45:layer===1?.7:1),i*7+layer*90)}
+ }
+ nycBridge(ch*.78,p.mid);
+ nycStatue(cw*.09,ch*.70,p.far);
+ nycEmpire(cw*.64,ch*.84,Math.min(ch*.39,270),p.near,p.lights,p.windows);
+ // Distant rooftop water tower, animated yellow taxis, and night reflections.
+ ctx.fillStyle=p.near;ctx.fillRect(cw*.85,ch*.73,32,22);ctx.fillRect(cw*.861,ch*.705,4,23);ctx.fillRect(cw*.884,ch*.705,4,23);
+ ctx.fillStyle=nycColor('#3a4d60','#0c1729',p.stars);ctx.fillRect(0,ch-55,cw,55);
+ for(let i=0;i<3;i++){let x=((elapsed*(25+i*11)+cw*.32*i)%(cw+110))-80,y=ch-30+(i%2)*12;
+ ctx.fillStyle='#efbe4a';ctx.fillRect(x,y,34,12);ctx.fillRect(x+8,y-7,18,9);ctx.fillStyle='#1a2d43';ctx.fillRect(x+11,y-5,12,5);ctx.fillRect(x+5,y+10,6,6);ctx.fillRect(x+25,y+10,6,6)}
+ if(p.lights>.35){ctx.fillStyle='rgba(255,184,108,'+((p.lights-.35)*.2)+')';for(let i=0;i<22;i++)ctx.fillRect((i*83)%cw,ch-50+(i%4)*11,9,2)}
+}
 function drawTile(x,y,r,level,alpha=1,scale=1){const l=levels[level];ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.globalAlpha=alpha;ctx.shadowColor=l.color;ctx.shadowBlur=19;const grad=ctx.createRadialGradient(-r*.32,-r*.45,r*.08,0,0,r);grad.addColorStop(0,'#ffffff');grad.addColorStop(.12,l.color);grad.addColorStop(1,'#19263e');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.save();ctx.beginPath();ctx.arc(0,0,r-4,0,Math.PI*2);ctx.clip();if(spriteOK){const sx=(l.photo%4)*64,sy=Math.floor(l.photo/4)*64;ctx.drawImage(sprite,sx,sy,64,64,-r+3,-r+3,(r-3)*2,(r-3)*2);ctx.fillStyle='#101b3050';ctx.fillRect(-r,-r,r*2,r*2)}else{ctx.font=(r*.9)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(l.emoji,0,-r*.13)}const shade=ctx.createLinearGradient(0,-r,0,r);shade.addColorStop(0,'#0000');shade.addColorStop(.53,'#0000');shade.addColorStop(1,'#08172fe8');ctx.fillStyle=shade;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();ctx.strokeStyle='#ffffffcc';ctx.lineWidth=Math.max(1.5,r*.055);ctx.beginPath();ctx.arc(0,0,r-2,0,7);ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='900 '+clamp(r*.24,8,14)+'px system-ui';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillStyle='#fff';ctx.fillText(l.short,0,r*.61,r*1.72);ctx.shadowBlur=0;ctx.fillStyle='#ffffff88';ctx.beginPath();ctx.ellipse(-r*.28,-r*.48,r*.25,r*.11,-.7,0,Math.PI*2);ctx.fill();ctx.restore()}
-function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);backgroundArt();const a=arena;roundRect(a.x-9,a.y-9,a.w+18,a.h+18,26,'#08182c');roundRect(a.x,a.y,a.w,a.h,20,'#0a1729e8');ctx.save();ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.clip();const glow=ctx.createLinearGradient(0,a.y,0,a.y+a.h);glow.addColorStop(0,'#35607e40');glow.addColorStop(1,'#162f5350');ctx.fillStyle=glow;ctx.fillRect(a.x,a.y,a.w,a.h);for(let j=0;j<9;j++){ctx.strokeStyle='#ffffff07';ctx.beginPath();ctx.moveTo(a.x,a.y+j*a.h/8);ctx.lineTo(a.x+a.w,a.y+j*a.h/8);ctx.stroke()}const dangerAlpha=clamp(danger/2.7,0,1);if(dangerAlpha){ctx.fillStyle='rgba(255,77,99,'+(dangerAlpha*.2)+')';ctx.fillRect(a.x,a.y,a.w,25)}for(const b of bodies)drawTile(b.x,b.y,b.r,b.level,1,b.scale);for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()}ctx.globalAlpha=1;ctx.restore();ctx.strokeStyle='#9eeaff77';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.stroke();
+function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);backgroundArt();const a=arena;roundRect(a.x-9,a.y-9,a.w+18,a.h+18,26,'#08182c');roundRect(a.x,a.y,a.w,a.h,20,'#0a1729ba');ctx.save();ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.clip();const glow=ctx.createLinearGradient(0,a.y,0,a.y+a.h);glow.addColorStop(0,'#35607e40');glow.addColorStop(1,'#162f5350');ctx.fillStyle=glow;ctx.fillRect(a.x,a.y,a.w,a.h);for(let j=0;j<9;j++){ctx.strokeStyle='#ffffff07';ctx.beginPath();ctx.moveTo(a.x,a.y+j*a.h/8);ctx.lineTo(a.x+a.w,a.y+j*a.h/8);ctx.stroke()}const dangerAlpha=clamp(danger/2.7,0,1);if(dangerAlpha){ctx.fillStyle='rgba(255,77,99,'+(dangerAlpha*.2)+')';ctx.fillRect(a.x,a.y,a.w,25)}for(const b of bodies)drawTile(b.x,b.y,b.r,b.level,1,b.scale);for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()}ctx.globalAlpha=1;ctx.restore();ctx.strokeStyle='#9eeaff77';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.stroke();
 if(running){const r=radii[current];ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#fcd3b477';ctx.beginPath();ctx.moveTo(aim,a.y-r-24);ctx.lineTo(aim,a.y+a.h);ctx.stroke();ctx.restore();drawTile(aim,a.y-r-17,r,current,dropCooldown>0?.65:1);const nr=radii[next];const px=cw>730?a.x+a.w+38:a.x+a.w-51,py=a.y-46;ctx.fillStyle='#d3ebff';ctx.font='800 10px system-ui';ctx.textAlign='center';ctx.fillText('NÆSTE',px,py-nr*.5-17);drawTile(px,py+nr*.25,Math.min(24,nr),next)}
 if(paused&&running){ctx.fillStyle='#071527c9';ctx.fillRect(a.x,a.y,a.w,a.h);ctx.textAlign='center';ctx.fillStyle='#f7f4e9';ctx.font='900 34px system-ui';ctx.fillText('PAUSE',a.x+a.w/2,a.y+a.h/2);ctx.font='500 14px system-ui';ctx.fillText('Tryk P eller Fortsæt',a.x+a.w/2,a.y+a.h/2+28)}if(pulse>0){ctx.fillStyle='rgba(255,232,190,'+(pulse*.12)+')';ctx.fillRect(a.x,a.y,a.w,a.h)}
 }
