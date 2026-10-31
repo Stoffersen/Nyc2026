@@ -1,34 +1,39 @@
-# NYC Family Quest — Fire levels
+# NYC Family Quest 3D
 
-A playful, original four-level family trip adventure in New York. The main entry point is `index.html`, with the previous **NYC Memories — Family Merge** kept playable at [merge.html](https://stoffersen.github.io/Nyc2026/merge.html).
+A four-chapter New York family adventure built with **Three.js**, a real WebGL renderer, physically based materials, dynamic lighting, soft shadows, depth fog, a perspective camera and custom-built 3D environments.
 
 ## Play
 
-**Main game:** https://stoffersen.github.io/Nyc2026/
+**3D experience:** https://stoffersen.github.io/Nyc2026/
 
-Designed for a modern browser on desktop, phone, or tablet. Uses a single HTML Canvas with no external JavaScript framework.
+**Legacy 2D version:** https://stoffersen.github.io/Nyc2026/legacy-2d.html
 
-## The four levels
+**Original merge game:** https://stoffersen.github.io/Nyc2026/merge.html
 
-1. **Race to the plane** — airport platform runner. Move using left/right arrows (or A/D); jump using Up/Space or the on-screen HOP button. Avoid suitcases, collect bonus stars, and reach Gate 26 before the departure timer expires.
-2. **Ditte in the M&M’S store** — candy catcher. Move using left/right controls or drag across the store; catch 24 falling colorful candy pieces from ceiling tubes without catching the grey suitcases.
-3. **Empire State elevator** — six small number-combination logic puzzles. Tap three circuit switches to sum exactly to the desired amount; press KØR ELEVATOR (or Enter) to rise one floor at a time.
-4. **NYC Food Quest** — New York route-based merge-and-cook game. Travel from the Statue of Liberty via Ground Zero and Chinatown to Madison Square Garden. Tap LAV MAD to generate food, tap two equal food pieces to merge them, then select the required dish and tap LEVER MAD at each stop. Complete four orders to finish the story.
+## The four 3D levels
 
-## Accessibility and controls
+1. **Airport Dash.** Run through a modern airport with glossy floors, terminal windows, check-in desks, overhead gate signs, suitcase obstacles and a plane at Gate 26. Reach boarding before the clock expires. Move with arrow keys / A–D or touch buttons, jump with Space / HOP.
+2. **Ditte's M&M’S Store.** Play inside a colorful 3D candy shop. Catch 25 candies dropping from tall overhead tubes, avoid suitcases and use a short **super-basket** catch ability (FANG / Space).
+3. **Empire State Elevator.** Family travels through a modeled Art Deco-inspired elevator shaft. Solve six energy-selection logic challenges to advance the lift to the top. Tap the puzzle switches or use 1/2/3 and Enter.
+4. **NYC Food Quest.** A 3D New York streetscape changes as the family travels through the Statue of Liberty, Ground Zero, Chinatown and Madison Square Garden. A merge-and-cook interface lets you combine food tiles and deliver four escalating orders.
 
-- Touch, mouse, and keyboard support.
-- Short sound cues with a mute toggle.
-- Independent minigame restart from each failure panel.
-- Level-by-level progression and total score.
-- Responsive Canvas display and on-screen controls.
+## Visual architecture
 
-## Family photo art and privacy
+- Three.js ES module from jsDelivr CDN (an internet connection is required)
+- Physically based Standard Materials, ACES filmic tone mapping, sRGB output
+- Hemisphere plus directional lighting, cast and received soft PCF shadows
+- Perspective chase camera and level-specific art direction
+- Procedural model geometry, animated falling objects, signage, reflective/glossy materials
+- Uses the supplied family vacation photo sprite for character faces as available
 
-The game uses the previously supplied small family-vacation sprite at `assets/nyc-family-sprite.jpg` for stylized faces. The repository is **public**, meaning this collage can be seen by anyone on the internet. Ensure consent from those depicted before sharing the game publicly. The game falls back to drawn faces if the sprite is unavailable.
+**Quality note:** This is a stylized real-time 3D browser implementation, not a photorealistic AAA game with scanned assets. Further quality improvements require authored environment art and character models, animation, deeper visual QA and optimization across phones.
 
-## Development and verification
+## Tests and backup
 
-Run `node scripts/smoke-test.mjs`. The test checks all four levels, the introductory screen, the full elevator-puzzle set, food delivery progression, the victory state and image asset. Automated simulation does **not** replace browser QA on actual devices.
+`node scripts/smoke-test.mjs` performs structural/syntax checks, verifies the four chapters, verifies six elevator challenges have solutions, and checks both preserved game backups. Full GPU and gameplay testing must happen on a real browser/device.
 
-The previous merge game is still available as a bonus at `merge.html`; its earlier functionality remains separate from the new four-level story.
+The 2D game and original merge game are deliberately kept in separate files.
+
+## Public family photos
+
+The repository is public, and the small collage of user-supplied vacation photos can be accessed by anyone who visits the repository/site. Ensure the individuals depicted consent to sharing. If the sprite is removed, 3D characters fall back to simple stylized heads.
