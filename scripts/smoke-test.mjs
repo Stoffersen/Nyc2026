@@ -19,6 +19,12 @@ assert.match(source,/new THREE.WebGLRenderer/);
 assert.match(source,/renderer\.shadowMap\.enabled=true/);
 assert.match(source,/THREE.ACESFilmicToneMapping/);
 assert.match(source,/new THREE.PerspectiveCamera/);
+assert.match(source,/function buildAirportForeground\(/,'Camera-relative 3D airport should exist');
+assert.match(source,/camera\.add\(group\)/,'Foreground must be attached to camera');
+assert.match(source,/scene\.add\(camera\)/,'Attached camera must be in scene graph');
+assert.match(source,/depthTest:false,depthWrite:false/,'Foreground must not be obscured by world geometry');
+assert.match(source,/updateAirportForeground\(dt\)/,'Airport foreground must animate with running state');
+
 assert.match(source,/cam\(-2,5\.3,7\.8,\.7,1\.25,0,true\)/,'Airport camera must begin inside terminal');
 assert.ok(!source.includes("box(135,8,.35,'#7b9aa9',51,4,10.7"),'Opaque wall must not block camera');
 assert.match(source,/portrait\?8:9/,'The chase camera must stay in front of terminal wall');
