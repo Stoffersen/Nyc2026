@@ -8,6 +8,15 @@ assert.match(html,/<canvas[^>]+id="scene"/);
 assert.match(html,/id="start"/);
 assert.match(html,/name="viewport"/);
 assert.match(html,/assets\/nyc-family-sprite\.jpg/);
+assert.match(html,/MORGEN · BROOKLYN/);
+assert.match(html,/DAG · MANHATTAN/);
+assert.match(html,/SOLNEDGANG · HUDSON/);
+assert.match(html,/NAT · TIMES SQUARE/);
+assert.match(html,/NYC_THRESHOLDS=\[0,800,2200,5000\]/);
+assert.match(html,/function nycPalette\(/);
+assert.match(html,/function nycEmpire\(/);
+assert.match(html,/function nycBridge\(/);
+
 const match=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.equal(match.length,1);
 const src=match[0][1];
