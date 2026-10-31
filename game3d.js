@@ -35,6 +35,7 @@ function glowSphere(x,y,z,color,r=.11){let m=sphere(r,new THREE.MeshBasicMateria
 function clearWorld(){avatars.length=0;while(root.children.length){const obj=root.children[0];root.remove(obj);if(obj.geometry)obj.geometry.dispose();if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());else if(obj.material&&!Object.values(mats).includes(obj.material))obj.material.dispose()}world={};scene.fog=new THREE.FogExp2('#142b44',.019);scene.background=new THREE.Color('#142b44');}
 const hemi=new THREE.HemisphereLight('#d3eeff','#6f789c',2.1);scene.add(hemi);
 const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);sun.castShadow=true;sun.shadow.mapSize.set(Math.min(innerWidth,innerHeight)<700?1024:2048,Math.min(innerWidth,innerHeight)<700?1024:2048);sun.shadow.camera.left=-32;sun.shadow.camera.right=32;sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;sun.shadow.bias=-.0002;scene.add(sun);
+// Camera now lives inside the terminal, not behind its opaque external wall.
 const cameraTarget=new THREE.Vector3();function cam(x,y,z,lookX,lookY,lookZ,instant=false){const a=instant?1:.065;camera.position.lerp(new THREE.Vector3(x,y,z),a);cameraTarget.lerp(new THREE.Vector3(lookX,lookY,lookZ),a);camera.lookAt(cameraTarget)}
 const candyColors=['#e9426d','#f2c23d','#63b9eb','#76c76c','#e18443','#bc74d7'];
 const photoTexture=new THREE.TextureLoader();let spriteMaterial=null;const avatars=[];
@@ -73,7 +74,9 @@ for(let j=0;j<4;j++)box(.11,7,.09,'#d5e8ef',x+j*2.8,3.5,-10.06)}
 // Flight-information panels and readable airport signage in the early camera view.
 for(let x=4;x<110;x+=18){sign('DEPARTURES  →',x,5.8,-9.85,5.1,1.1,true,'#ffe39e','#123c55');box(3.5,2,.24,mat('#17384f',.32,.3),x+3.5,3.7,-9.85);sign('GATE 26   ON TIME',x+3.5,3.7,-9.71,3.1,1.25,true,'#95f1d0','#17384f')}
 
-box(135,8,.35,'#7b9aa9',51,4,10.7,.44,.42);
+// IMPORTANT: no opaque wall between the chase camera and the airport concourse.
+// Glass safety barrier only along the far side, away from the camera.
+box(135,1.0,.18,mat('#789fb0',.2,.45),51,.5,10.7);
 for(let i=0;i<60;i++){const x=-5+i*2.1;box(1.4,.05,.02,'#fff1c3',x,.012,0)}
 for(let i=0;i<16;i++){sign('GATES  →',i*8,5.8,-9.7,2.9,.66,false,'#ffebb4','#17415b');box(1.4,.85,1.1,'#7190a7',i*8, .43,7);box(1.1,.09,2.1,'#c7dfde',i*8,.89,7)}
 gateDoor(106);airplane(108);
@@ -81,7 +84,7 @@ const obstacles=[];for(let i=0;i<17;i++){let x=7+i*5.6,z=(i%3-1)*2.5;obstacles.p
 const starItems=[];for(let i=0;i<20;i++){const x=8+i*4.8,z=[-3,0,3][i%3];const group=new THREE.Group();const tor=new THREE.Mesh(new THREE.TorusGeometry(.32,.1,8,5),new THREE.MeshStandardMaterial({color:'#ffcc60',metalness:.8,roughness:.2,emissive:'#d7a442',emissiveIntensity:.55}));group.add(tor);group.position.set(x,1.5,z);root.add(group);starItems.push({x,z,group,taken:false})}
 const player=human(0,0,'#e9a272',1,3),family=[human(-1.4,-1.6,'#82c6d0',.84,1),human(-2.7,1.6,'#e395b8',.77,6)];
 world={x:0,z:0,velocityY:0,y:0,time:75,health:3,inv:0,player,family,obstacles,starItems,length:106,stats:0};
-cam(-1.8,5.2,17,.7,1.5,0,true);
+cam(-2,5.3,7.8,.7,1.25,0,true);
 }
 function makePipe(x){const metal=mat('#d6cad8',.7,.21);cylinder(.72,.72,4.2,metal,x,7.8,-5,20);const rim=cylinder(.8,.8,.24,'#f2e6f2',x,5.65,-5);rim.material=mat('#f8eff8',.7,.17);for(let j=0;j<8;j++)sphere(.22,candyColors[j%6],x+Math.sin(j*2)*.24,5.8+(j%3)*.17,-5+Math.cos(j*2)*.22,.2,.22)}
 function candy(x,y,z,col,bad=false){
@@ -163,7 +166,7 @@ $('#status').textContent='AFGANG OM '+Math.ceil(g.time)+'s\n❤ '+g.health;
 $('#progressFill').style.width=(g.x/g.length*100)+'%';
 // Keep the family in the middle of the narrow iPhone field of view.
 const portrait=innerHeight>innerWidth;
-cam(g.x-(portrait?1.5:3),portrait?5.5:6.5,portrait?18:15,g.x+(portrait?.9:1.4),1.45,0);
+cam(g.x-(portrait?2:4),portrait?5.3:6.5,portrait?8:9,g.x+(portrait?.6:1.2),1.25,0);
 if(g.x>=g.length-1){addScore(Math.ceil(g.time)*12+g.health*100);win()}
 }
 function jump(){if(level===1&&mode==='play'&&world.y<=.01){world.velocityY=9.5;beep(340)}}
