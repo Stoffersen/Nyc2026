@@ -1,78 +1,68 @@
 import fs from 'node:fs';
-import assert from 'node:assert/strict';
 import vm from 'node:vm';
+import assert from 'node:assert/strict';
+
 const root=new URL('../',import.meta.url);
 const html=fs.readFileSync(new URL('index.html',root),'utf8');
-assert.match(html,/<!doctype html>/i);
-assert.match(html,/<canvas[^>]+id="scene"/);
-assert.match(html,/id="start"/);
-assert.match(html,/name="viewport"/);
-assert.match(html,/assets\/nyc-family-sprite\.jpg/);
-assert.match(html,/MORGEN · BROOKLYN/);
-assert.match(html,/DAG · MANHATTAN/);
-assert.match(html,/SOLNEDGANG · HUDSON/);
-assert.match(html,/NAT · TIMES SQUARE/);
-assert.match(html,/NYC_THRESHOLDS=\[0,800,2200,5000\]/);
-assert.match(html,/function nycPalette\(/);
-assert.match(html,/function nycEmpire\(/);
-assert.match(html,/function nycBridge\(/);
-
-const match=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
-assert.equal(match.length,1);
-const src=match[0][1];
-new vm.Script(src,{filename:'merge-game.js'});
-for(const f of ['function merge(','function drop(','function physics(','function lose(','function drawTile(','pointerdown','pointerup','localStorage','requestAnimationFrame'])
- assert.ok(src.includes(f),'Missing '+f);
-const photo=fs.readFileSync(new URL('assets/nyc-family-sprite.jpg',root));
-assert.ok(photo.length>2000);
-assert.equal(photo[0],0xff);assert.equal(photo[1],0xd8);
-const events={};const elements=new Map();let scheduled=null;const fakeGradient={addColorStop(){}};
-const ctx=new Proxy({createLinearGradient:()=>fakeGradient,createRadialGradient:()=>fakeGradient,measureText:()=>({width:50})},{get(t,k){if(k in t)return t[k];return ()=>{}},set(t,k,v){t[k]=v;return true}});
-const makeElement=(name)=>({id:name,textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){}},addEventListener(type,cb){events[name+':'+type]=cb},getContext:()=>ctx,getBoundingClientRect:()=>({left:0,top:0}),setPointerCapture(){},setAttribute(name,value){this[name]=value}});
-const canvas=makeElement('scene');elements.set('#scene',canvas);
-const document={querySelector(sel){if(!elements.has(sel))elements.set(sel,makeElement(sel));return elements.get(sel)},getElementById(id){return this.querySelector('#'+id)}};
-class ImageStub{set src(x){this._src=x}get src(){return this._src}}
-const storage=new Map();
-class AudioParamStub{setValueAtTime(){} exponentialRampToValueAtTime(){} cancelScheduledValues(){} setTargetAtTime(){}}
-class AudioNodeStub{constructor(){this.gain=new AudioParamStub();this.frequency=new AudioParamStub()}connect(){return this}start(){}stop(){}}
-class AudioContextStub{constructor(){this.currentTime=0;this.state='running';this.destination=new AudioNodeStub()}createGain(){return new AudioNodeStub()}createOscillator(){return new AudioNodeStub()}resume(){this.state='running'}}
-const sandbox={window:{AudioContext:AudioContextStub},document,Image:ImageStub,innerWidth:950,innerHeight:820,devicePixelRatio:1,performance:{now:()=>0},Math,console,
- navigator:{vibrate:()=>{}},localStorage:{getItem:k=>storage.get(k)||null,setItem:(k,v)=>storage.set(k,v)},
- addEventListener:(type,cb)=>{events['window:'+type]=cb},requestAnimationFrame:cb=>{scheduled=cb},
- AudioContext:undefined,webkitAudioContext:undefined};
-vm.runInNewContext(src,sandbox,{timeout:4000});
-assert.ok(events['#start:click'],'Missing start button handler');
-events['#start:click']();
-assert.ok(scheduled,'Animation was not scheduled');
-for(let i=1;i<8;i++){const next=scheduled;next(i*16.67)}
-assert.ok(events['scene:pointerdown']&&events['scene:pointerup'],'Missing pointer handlers');
-for(let n=0;n<4;n++){
- events['scene:pointerdown']({clientX:475,pointerId:1,preventDefault(){}});
- events['scene:pointerup']({clientX:475,pointerId:1,preventDefault(){}});
- for(let i=1;i<=32;i++){const next=scheduled;next((10+n*40+i)*16.67)}
+const sprite=fs.readFileSync(new URL('assets/nyc-family-sprite.jpg',root));
+assert.equal(sprite[0],0xff);
+assert.equal(sprite[1],0xd8);
+assert.ok(sprite.length>2000);
+assert.match(html,/NYC FAMILY QUEST/);
+assert.match(html,/href="merge.html"/);
+const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
+assert.equal(scripts.length,1);
+const original=scripts[0][1];
+new vm.Script(original);
+for(const phrase of ['Kapløb til flyet','Ditte i M&M’S Store','Elevatoren til toppen','New York Food Quest','function physics1(','function physics2(','function solve(','function foodTap(','function foodSpawn(','function serveFood(']){
+  assert.ok(original.includes(phrase),'Missing '+phrase);
 }
-assert.ok(elements.get('#score').textContent!==undefined,'Score UI missing');
-assert.ok(events['#volume:input'],'Missing music volume slider');
-events['#volume:input']({target:{value:90}});
-assert.equal(storage.get('nyc-merge-volume-v1'),'90');
-assert.ok(events['#music:click'],'Missing separate music toggle');
-events['#music:click']();assert.equal(elements.get('#music').textContent,'♫ Fra');
-assert.equal(storage.get('nyc-merge-music-v1'),'off');
-events['#music:click']();assert.equal(elements.get('#music').textContent,'♫ Musik');
-assert.equal(storage.get('nyc-merge-music-v1'),'on');
-assert.ok(events['#mute:click'],'Missing separate sound effect toggle');
-events['#mute:click']();assert.equal(elements.get('#mute').textContent,'♪̸ FX');
-events['#mute:click']();assert.equal(elements.get('#mute').textContent,'♪ FX');
-assert.ok(events['#pause:click'],'Missing pause handler');
-events['#pause:click']();assert.equal(elements.get('#pause').textContent,'▶ Fortsæt');
-events['#pause:click']();assert.equal(elements.get('#pause').textContent,'Ⅱ Pause');
-assert.ok(events['#openAlbum:click']&&events['#closeAlbum:click'],'Missing photo album controls');
-events['#openAlbum:click']();
-assert.match(elements.get('#albumGrid').innerHTML,/Pancake breakfast/,'Album grid did not render');
-events['#closeAlbum:click']();
-assert.ok(elements.get('#collectionTrack').style.width,'Collection progress did not update');
-assert.ok(events['window:resize'],'Missing device rotation handler');
-events['window:resize']();
-for(let i=0;i<15;i++){const next=scheduled;next((185+i)*16.67)}
-
-console.log('PASS: HTML structure, sprite, syntax, interactive game loop, drop controls, music volume, separate music/SFX controls, pause, photo album, resize and render.');
+const injected=original.replace(/\}\)\(\);\s*$/,'window.__qa={startLevel,pass,finish,game:()=>game,mode:()=>mode,level:()=>level,toggleSwitch,solve,foodSpawn,foodTap,serveFood};})();');
+assert.ok(injected.includes('window.__qa={'));
+const E={},elements=new Map(),gradient={addColorStop(){}};let scheduled=null;
+const canvasContext=new Proxy({
+ createLinearGradient:()=>gradient,createRadialGradient:()=>gradient
+},{get(obj,key){return key in obj?obj[key]:()=>{}},set(obj,key,val){obj[key]=val;return true}});
+const createElement=key=>({
+ textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){},toggle(){}},
+ addEventListener:(type,cb)=>E[key+':'+type]=cb,getContext:()=>canvasContext,
+ setPointerCapture(){},setAttribute(){},getBoundingClientRect:()=>({left:0,top:0})
+});
+const doc={querySelector(key){if(!elements.has(key))elements.set(key,createElement(key));return elements.get(key)},getElementById(id){return this.querySelector('#'+id)}};
+class ImgStub{set src(v){this._src=v}}
+class Param{setValueAtTime(){} exponentialRampToValueAtTime(){}}
+class AudioNode{constructor(){this.gain=new Param();this.frequency=new Param()}connect(){return this}start(){}stop(){}}
+class AudioStub{constructor(){this.currentTime=0;this.state='running';this.destination=new AudioNode()}createGain(){return new AudioNode()}createOscillator(){return new AudioNode()}resume(){}}
+const window={devicePixelRatio:1,AudioContext:AudioStub};
+const sandbox={window,document:doc,Image:ImgStub,addEventListener:(key,fn)=>E['window:'+key]=fn,requestAnimationFrame:fn=>scheduled=fn,Math,console};
+vm.runInNewContext(injected,sandbox,{timeout:5000});
+assert.ok(scheduled,'Animation loop absent');
+scheduled(16);
+assert.equal(window.__qa.mode(),'panel');
+assert.ok(E['#dialogStart:click']);
+E['#dialogStart:click']();
+assert.equal(window.__qa.level(),1);
+for(let i=0;i<30;i++)scheduled(i*16);
+for(const level of [1,2,3,4]){
+ window.__qa.startLevel(level);
+ for(let i=0;i<20;i++)scheduled((i+200+level*20)*16);
+ assert.equal(window.__qa.level(),level);
+ assert.equal(window.__qa.mode(),'play');
+}
+window.__qa.startLevel(3);
+for(let floor=0;floor<6;floor++){
+ const p=window.__qa.game().puzzles[floor];
+ const mask=Array.from({length:8},(_,i)=>i).find(m=>p.v.reduce((sum,v,i)=>sum+((m>>i&1)?v:0),0)===p.goal);
+ assert.notEqual(mask,undefined,'Impossible elevator floor '+floor);
+ for(let i=0;i<3;i++)if((mask>>i)&1)window.__qa.toggleSwitch(i);
+ window.__qa.solve();
+}
+assert.equal(window.__qa.mode(),'panel','Elevator should lead to success transition');
+window.__qa.startLevel(4);
+const g=window.__qa.game();
+for(let stop=0;stop<4;stop++){
+ g.board[0]=g.orders[stop];g.chosen=0;window.__qa.serveFood();
+}
+assert.equal(window.__qa.mode(),'panel','Final level should show completion panel');
+assert.match(elements.get('#dialogHeading').innerHTML,/CHAMPIONS/);
+console.log('PASS: four levels, sprite asset, intro, animation, all elevator puzzles, food deliveries, final victory.');
