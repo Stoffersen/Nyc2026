@@ -19,6 +19,17 @@ The game uses a **small, compressed collage** derived from the family vacation p
 
 The game includes an **original, procedurally synthesized 82 BPM lo-fi jazz soundtrack**. Soft extended chords, bass, high percussion and a short melody are generated in the browser with Web Audio; no commercial music files or external streaming services are used. Music begins only after the player starts a game and fades out during pauses, while the album is open, when the tab is hidden, and on game over. Use **♫ Musik** to toggle the soundtrack, the **Vol** slider to adjust music volume, and **♪ FX** to control gameplay sound effects independently. Music and volume preferences are stored locally. If music is silent, press Start and turn up the Vol slider and the device's media volume.
 
+## Dynamic New York backdrop
+
+The old flat blue background has been replaced with a custom Canvas-rendered New York cityscape. The backdrop transitions smoothly with score progression:
+
+- 0–799: Brooklyn morning
+- 800–2199: Manhattan daytime
+- 2200–4999: Hudson River sunset
+- 5000+: illuminated Times Square-inspired night
+
+Layered buildings, Brooklyn Bridge, an Empire State-inspired tower, harbor elements, stars, window lights and moving yellow taxis are rendered without external assets. A live HUD label shows the current destination. The game board is translucent so the city remains visible behind the pieces.
+
 ## Features
 8 merge levels, real-time circular collisions, merge chains, particles, orientation-aware board resizing, next-piece preview, best score in local storage, persistent unlocked photo collection, album view, short synthesized audio, haptic merge feedback where supported, pause/resume, mobile and keyboard support.
 
