@@ -34,7 +34,7 @@ function areaLight(x,y,z,color,intensity=25,width=6,height=1){const l=new THREE.
 function glowSphere(x,y,z,color,r=.11){let m=sphere(r,new THREE.MeshBasicMaterial({color}),x,y,z);m.castShadow=false;return m}
 function clearWorld(){avatars.length=0;while(root.children.length){const obj=root.children[0];root.remove(obj);if(obj.geometry)obj.geometry.dispose();if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());else if(obj.material&&!Object.values(mats).includes(obj.material))obj.material.dispose()}world={};scene.fog=new THREE.FogExp2('#142b44',.019);scene.background=new THREE.Color('#142b44');}
 const hemi=new THREE.HemisphereLight('#d3eeff','#6f789c',2.1);scene.add(hemi);
-const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-32;sun.shadow.camera.right=32;sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;sun.shadow.bias=-.0002;scene.add(sun);
+const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);sun.castShadow=true;sun.shadow.mapSize.set(Math.min(innerWidth,innerHeight)<700?1024:2048,Math.min(innerWidth,innerHeight)<700?1024:2048);sun.shadow.camera.left=-32;sun.shadow.camera.right=32;sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;sun.shadow.bias=-.0002;scene.add(sun);
 const cameraTarget=new THREE.Vector3();function cam(x,y,z,lookX,lookY,lookZ,instant=false){const a=instant?1:.065;camera.position.lerp(new THREE.Vector3(x,y,z),a);cameraTarget.lerp(new THREE.Vector3(lookX,lookY,lookZ),a);camera.lookAt(cameraTarget)}
 const candyColors=['#e9426d','#f2c23d','#63b9eb','#76c76c','#e18443','#bc74d7'];
 const photoTexture=new THREE.TextureLoader();let spriteMaterial=null;const avatars=[];
@@ -60,12 +60,19 @@ for(let j=0;j<8;j++)for(const side of [-1,1]){const w=new THREE.Mesh(new THREE.S
 group.position.set(x,1,-20);root.add(group)}
 function suitcase(x,z,color='#ab5f78',scale=1){const group=new THREE.Group(),body=new THREE.Mesh(new THREE.BoxGeometry(.9,1.25,.58),mat(color,.3,.38));body.position.y=.72;group.add(body);const handle=new THREE.Mesh(new THREE.TorusGeometry(.2,.05,5,10,Math.PI),mat('#26394c'));handle.position.set(0,1.48,0);group.add(handle);for(const xx of [-.3,.3]){const wheel=new THREE.Mesh(new THREE.SphereGeometry(.09,8,8),mat('#212b38'));wheel.position.set(xx,.08,.2);group.add(wheel)}group.position.set(x,0,z);group.scale.setScalar(scale);root.add(group);return group}
 function setup1(){
-clearWorld();scene.background=new THREE.Color('#8db5c4');scene.fog=new THREE.Fog('#a3bdc4',40,130);sun.intensity=3.5;hemi.intensity=2.4;
-plane(200,26,'#b4c7cd',48,-.07,0);
-for(let i=0;i<125;i++){box(.025,.005,24,'#92aab7',i*1.6,.007,0);if(i%2===0)box(1.6,.005,.027,'#92aab7',i*1.6,.008,0)}
-for(let x=-8;x<115;x+=10){box(.35,8,.4,'#d6e3e9',x,4,-10);box(.35,8,.4,'#d6e3e9',x,4,10);box(10,.3,20,'#dae5ea',x,8,0);box(8,.22,2,'#a0acb9',x,7,-1);areaLight(x,7.8,0,'#e6f6ff',18,4.8,.8);
-for(let j=0;j<4;j++){box(.06,7,.06,'#e2f4ff',x+j*2.35,3.5,-9.9);box(2.2,6.7,.055,'#7bafc6',x+j*2.35+1.16,3.7,-9.94,.52,.17)}
-}
+clearWorld();scene.background=new THREE.Color('#7fa8c0');scene.fog=new THREE.Fog('#a6c2d0',48,175);sun.intensity=3.25;hemi.intensity=2.65;
+// The airport concourse is a substantial solid 3D floor instead of a near-invisible flat plane.
+box(150,.48,22,mat('#abc4d0',.22,.36),51,-.27,0);
+box(150,.13,2.1,'#dfad70',51,.03,7.1);
+for(let i=0;i<72;i++){box(.027,.009,22,'#7d9ba9',i*1.7,.015,0);if(i%2===0)box(1.65,.012,.03,'#8ba7b3',i*1.7,.018,0)}
+// Strong high-contrast ceiling beams, window mullions, and distant departure gates.
+box(145,.35,22,'#dde6eb',50.5,8.1,0);
+box(145,7.1,.2,mat('#4e798f',.44,.3),51,3.55,-10.6);
+for(let x=-6;x<115;x+=12){box(.55,8,.58,'#e7f1f3',x,4,-10.2);box(.48,8,.5,'#dfe9ef',x,4,10);box(12,.28,22,'#f0f3ee',x,8.35,0);areaLight(x,7.7,1.2,'#e9f7ff',11,4.2,.65);
+for(let j=0;j<4;j++)box(.11,7,.09,'#d5e8ef',x+j*2.8,3.5,-10.06)}
+// Flight-information panels and readable airport signage in the early camera view.
+for(let x=4;x<110;x+=18){sign('DEPARTURES  →',x,5.8,-9.85,5.1,1.1,true,'#ffe39e','#123c55');box(3.5,2,.24,mat('#17384f',.32,.3),x+3.5,3.7,-9.85);sign('GATE 26   ON TIME',x+3.5,3.7,-9.71,3.1,1.25,true,'#95f1d0','#17384f')}
+
 box(135,8,.35,'#7b9aa9',51,4,10.7,.44,.42);
 for(let i=0;i<60;i++){const x=-5+i*2.1;box(1.4,.05,.02,'#fff1c3',x,.012,0)}
 for(let i=0;i<16;i++){sign('GATES  →',i*8,5.8,-9.7,2.9,.66,false,'#ffebb4','#17415b');box(1.4,.85,1.1,'#7190a7',i*8, .43,7);box(1.1,.09,2.1,'#c7dfde',i*8,.89,7)}
@@ -74,7 +81,7 @@ const obstacles=[];for(let i=0;i<17;i++){let x=7+i*5.6,z=(i%3-1)*2.5;obstacles.p
 const starItems=[];for(let i=0;i<20;i++){const x=8+i*4.8,z=[-3,0,3][i%3];const group=new THREE.Group();const tor=new THREE.Mesh(new THREE.TorusGeometry(.32,.1,8,5),new THREE.MeshStandardMaterial({color:'#ffcc60',metalness:.8,roughness:.2,emissive:'#d7a442',emissiveIntensity:.55}));group.add(tor);group.position.set(x,1.5,z);root.add(group);starItems.push({x,z,group,taken:false})}
 const player=human(0,0,'#e9a272',1,3),family=[human(-1.4,-1.6,'#82c6d0',.84,1),human(-2.7,1.6,'#e395b8',.77,6)];
 world={x:0,z:0,velocityY:0,y:0,time:75,health:3,inv:0,player,family,obstacles,starItems,length:106,stats:0};
-cam(-8,6.5,12,6,1.5,0,true);
+cam(-1.8,5.2,17,.7,1.5,0,true);
 }
 function makePipe(x){const metal=mat('#d6cad8',.7,.21);cylinder(.72,.72,4.2,metal,x,7.8,-5,20);const rim=cylinder(.8,.8,.24,'#f2e6f2',x,5.65,-5);rim.material=mat('#f8eff8',.7,.17);for(let j=0;j<8;j++)sphere(.22,candyColors[j%6],x+Math.sin(j*2)*.24,5.8+(j%3)*.17,-5+Math.cos(j*2)*.22,.2,.22)}
 function candy(x,y,z,col,bad=false){
@@ -154,7 +161,9 @@ for(const o of g.obstacles){if(g.inv<=0&&Math.abs(g.x-o.x)<.8&&Math.abs(g.z-o.z)
 for(const item of g.starItems){item.group.rotation.y+=dt*2.2;item.group.position.y=1.5+Math.sin(elapsed*3+item.x)*.16;if(!item.taken&&Math.abs(item.x-g.x)<.7&&Math.abs(item.z-g.z)<1.7){item.taken=true;item.group.visible=false;addScore(50);beep(840)}}
 $('#status').textContent='AFGANG OM '+Math.ceil(g.time)+'s\n❤ '+g.health;
 $('#progressFill').style.width=(g.x/g.length*100)+'%';
-cam(g.x-10,6.7,12,g.x+8,1.8,0);
+// Keep the family in the middle of the narrow iPhone field of view.
+const portrait=innerHeight>innerWidth;
+cam(g.x-(portrait?1.5:3),portrait?5.5:6.5,portrait?18:15,g.x+(portrait?.9:1.4),1.45,0);
 if(g.x>=g.length-1){addScore(Math.ceil(g.time)*12+g.health*100);win()}
 }
 function jump(){if(level===1&&mode==='play'&&world.y<=.01){world.velocityY=9.5;beep(340)}}
@@ -195,7 +204,7 @@ if(mode!=='play')return;elapsed+=dt;if(toastUntil&&elapsed>toastUntil){$('#notic
 if(level===1)physics1(dt);if(level===2)physics2(dt);if(level===3)physics3(dt);
 }
 function animate(ts){const dt=Math.min(.04,(ts-last)/1000||0);last=ts;update(dt);renderer.render(scene,camera);requestAnimationFrame(animate)}
-function resize(){const w=innerWidth,h=innerHeight,pr=Math.min(devicePixelRatio||1,2);renderer.setPixelRatio(pr);renderer.setSize(w,h,false);camera.aspect=w/h;camera.updateProjectionMatrix()}
+function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight),mobile=h>w;renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.5:2));renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=mobile?68:57;camera.updateProjectionMatrix()}
 window.addEventListener('resize',resize);
 const press=(name,value)=>{keys[name]=value;$('#'+name).classList.toggle('down',value)};
 for(const name of ['left','right']){let button=$('#'+name);button.addEventListener('pointerdown',e=>{e.preventDefault();press(name,true);button.setPointerCapture(e.pointerId)});for(const evt of ['pointerup','pointercancel','lostpointercapture','pointerleave'])button.addEventListener(evt,()=>press(name,false))}
