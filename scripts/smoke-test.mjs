@@ -43,4 +43,13 @@ assert.ok(elements.get('#score').textContent!==undefined,'Score UI missing');
 assert.ok(events['#pause:click'],'Missing pause handler');
 events['#pause:click']();assert.equal(elements.get('#pause').textContent,'▶ Fortsæt');
 events['#pause:click']();assert.equal(elements.get('#pause').textContent,'Ⅱ Pause');
-console.log('PASS: HTML structure, sprite, syntax, interactive game loop, drop controls, pause and render.');
+assert.ok(events['#openAlbum:click']&&events['#closeAlbum:click'],'Missing photo album controls');
+events['#openAlbum:click']();
+assert.match(elements.get('#albumGrid').innerHTML,/Pancake breakfast/,'Album grid did not render');
+events['#closeAlbum:click']();
+assert.ok(elements.get('#collectionTrack').style.width,'Collection progress did not update');
+assert.ok(events['window:resize'],'Missing device rotation handler');
+events['window:resize']();
+for(let i=0;i<15;i++){const next=scheduled;next((185+i)*16.67)}
+
+console.log('PASS: HTML structure, sprite, syntax, interactive game loop, drop controls, pause, photo album, resize and render.');
