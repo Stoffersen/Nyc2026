@@ -32,7 +32,7 @@ function textTexture(text,color='#ffffff',back='#0e344a',width=512,height=140,si
 function sign(label,x,y,z,w=4,h=1,front=true,color='#ffdf9a',back='#133b50'){const m=new THREE.Mesh(new THREE.PlaneGeometry(w,h),new THREE.MeshBasicMaterial({map:textTexture(label,color,back),transparent:false,side:THREE.DoubleSide}));m.position.set(x,y,z);if(!front)m.rotation.y=Math.PI;root.add(m);return m}
 function areaLight(x,y,z,color,intensity=25,width=6,height=1){const l=new THREE.PointLight(color,intensity,20,2);l.position.set(x,y,z);root.add(l);const panel=box(width,.035,height,'#d5ecff',x,y+.01,z);panel.material=new THREE.MeshBasicMaterial({color});return l}
 function glowSphere(x,y,z,color,r=.11){let m=sphere(r,new THREE.MeshBasicMaterial({color}),x,y,z);m.castShadow=false;return m}
-function clearWorld(){avatars.length=0;while(root.children.length){const obj=root.children[0];root.remove(obj);if(obj.geometry)obj.geometry.dispose();if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());else if(obj.material&&!Object.values(mats).includes(obj.material))obj.material.dispose()}world={};scene.fog=new THREE.FogExp2('#142b44',.019);scene.background=new THREE.Color('#142b44');}
+function clearWorld(){if(airportCockpit){camera.remove(airportCockpit);airportCockpit=null}avatars.length=0;while(root.children.length){const obj=root.children[0];root.remove(obj);if(obj.geometry)obj.geometry.dispose();if(Array.isArray(obj.material))obj.material.forEach(m=>m.dispose());else if(obj.material&&!Object.values(mats).includes(obj.material))obj.material.dispose()}world={};scene.fog=new THREE.FogExp2('#142b44',.019);scene.background=new THREE.Color('#142b44');}
 const hemi=new THREE.HemisphereLight('#d3eeff','#6f789c',2.1);scene.add(hemi);
 const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);sun.castShadow=true;sun.shadow.mapSize.set(Math.min(innerWidth,innerHeight)<700?1024:2048,Math.min(innerWidth,innerHeight)<700?1024:2048);sun.shadow.camera.left=-32;sun.shadow.camera.right=32;sun.shadow.camera.top=32;sun.shadow.camera.bottom=-32;sun.shadow.bias=-.0002;scene.add(sun);
 // Camera now lives inside the terminal, not behind its opaque external wall.
@@ -60,6 +60,86 @@ const tail=new THREE.Mesh(new THREE.BoxGeometry(.8,2.3,2.2),blue);part(tail,-4.4
 for(let j=0;j<8;j++)for(const side of [-1,1]){const w=new THREE.Mesh(new THREE.SphereGeometry(.12,8,8),blue);part(w,j-3.2,2.2,side*.99)}
 group.position.set(x,1,-20);root.add(group)}
 function suitcase(x,z,color='#ab5f78',scale=1){const group=new THREE.Group(),body=new THREE.Mesh(new THREE.BoxGeometry(.9,1.25,.58),mat(color,.3,.38));body.position.y=.72;group.add(body);const handle=new THREE.Mesh(new THREE.TorusGeometry(.2,.05,5,10,Math.PI),mat('#26394c'));handle.position.set(0,1.48,0);group.add(handle);for(const xx of [-.3,.3]){const wheel=new THREE.Mesh(new THREE.SphereGeometry(.09,8,8),mat('#212b38'));wheel.position.set(xx,.08,.2);group.add(wheel)}group.position.set(x,0,z);group.scale.setScalar(scale);root.add(group);return group}
+
+/*
+ * iPhone-safe airport foreground: all geometry is attached to the camera.
+ * This guarantees an unmistakable three-dimensional concourse and family
+ * in the frustum, even when world-space architecture unexpectedly occludes it.
+ * The game logic still runs in the actual airport world.
+ */
+let airportCockpit=null;
+function buildAirportForeground(){
+ if(airportCockpit){camera.remove(airportCockpit);airportCockpit.traverse?.(o=>{if(o.geometry)o.geometry.dispose()});airportCockpit=null}
+ const group=new THREE.Group();camera.add(group);if(camera.parent!==scene)scene.add(camera);
+ airportCockpit=group;
+ const make=(w,h,d,shade,x,y,z,order=120)=>{
+  const mesh=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color:shade,depthTest:false,depthWrite:false}));
+  mesh.position.set(x,y,z);mesh.renderOrder=order;group.add(mesh);return mesh
+ };
+ const orb=(r,shade,x,y,z,order=125)=>{
+  const mesh=new THREE.Mesh(new THREE.SphereGeometry(r,16,12),new THREE.MeshBasicMaterial({color:shade,depthTest:false,depthWrite:false}));
+  mesh.position.set(x,y,z);mesh.renderOrder=order;group.add(mesh);return mesh
+ };
+ // Perspective terminal corridor: a visible floor, ceiling lights, windows, desks.
+ make(24,.15,43,'#d1dfe4',0,-2.15,-23,110);
+ make(24,.08,43,'#e6edf0',0,4.3,-23,111);
+ make(24,.4,.22,'#587a94',0,-1.94,-11.5,111);
+ for(let i=0;i<13;i++){
+  const z=-6-i*2.5;
+  make(.17,6,.19,'#2e5871',-6,-.1,z,113);
+  make(.17,6,.19,'#2e5871',6,-.1,z,113);
+  make(12,.16,.22,'#b9cbd5',0,3.65,z,114);
+  if(i%2===0){
+   make(4.2,.07,.6,'#fff8d7',0,4.05,z,115);
+   make(3.6,.14,1.2,'#648da6',-3.5,-1.55,z,116);
+   make(3.6,.14,1.2,'#648da6',3.5,-1.55,z,116);
+  }
+ }
+ // Airport wayfinding directly in the view, not an invisible wall behind it.
+ const placard=new THREE.Mesh(new THREE.PlaneGeometry(5.5,1),new THREE.MeshBasicMaterial({
+  map:textTexture('GATE 26  →','#fff6bd','#153e5a',512,128,48),
+  depthTest:false,depthWrite:false,side:THREE.DoubleSide
+ }));placard.position.set(0,2.55,-11);placard.renderOrder=118;group.add(placard);
+ // Family figures are deliberately large enough to read on narrow iPhones.
+ const folks=[{x:-1.15,coat:'#6cc4d0',pant:'#273d59',s:1},{x:0,coat:'#f1a778',pant:'#334a65',s:1.18},{x:1.18,coat:'#ef93b3',pant:'#334a65',s:.92}];
+ const heroes=[];
+ for(const f of folks){
+  const hero=new THREE.Group();hero.position.set(f.x,-1.9,-6.7);
+  const add=(w,h,d,shade,x,y,z)=>{const m=new THREE.Mesh(new THREE.BoxGeometry(w,h,d),new THREE.MeshBasicMaterial({color:shade,depthTest:false,depthWrite:false}));m.position.set(x,y,z);m.renderOrder=131;hero.add(m);return m};
+  const head=new THREE.Mesh(new THREE.SphereGeometry(.29,18,12),new THREE.MeshBasicMaterial({color:'#f6c7a9',depthTest:false,depthWrite:false}));head.position.set(0,1.85,0);head.renderOrder=133;hero.add(head);
+  add(.67,.86,.39,f.coat,0,1.12,0);
+  const l=add(.2,.72,.23,f.pant,-.18,.34,0),rr=add(.2,.72,.23,f.pant,.18,.34,0);
+  add(.17,.65,.2,'#efbd9a',-.42,1.16,0);add(.17,.65,.2,'#efbd9a',.42,1.16,0);
+  const hair=new THREE.Mesh(new THREE.SphereGeometry(.3,16,10,0,Math.PI*2,0,Math.PI*.42),new THREE.MeshBasicMaterial({color:'#3d302e',depthTest:false,depthWrite:false}));hair.position.set(0,1.98,0);hair.renderOrder=134;hero.add(hair);
+  hero.scale.setScalar(f.s);group.add(hero);heroes.push({hero,l,rr});
+ }
+ const obstacles=[];
+ for(let i=0;i<8;i++){
+  const x=[-2.65,2.8,0,1.6,-1.8][i%5],z=-12-i*4;
+  const body=make(.9,1.04,.63,['#bd6582','#7396c7','#d59c70'][i%3],x,-1.55,z,121);
+  const handle=make(.4,.16,.1,'#263b55',x,-.95,z,122);
+  obstacles.push({body,handle,z,worldX:7+i*11,x})
+ }
+ return {group,heroes,obstacles};
+}
+function updateAirportForeground(dt){
+ if(!airportCockpit||level!==1||!world.player)return;
+ const u=elapsed*11,heroes=airportCockpit.userData.heroes;
+ // Foreground family runs in place while the full airport scrolls in depth.
+ for(let i=0;i<heroes.length;i++){
+  const h=heroes[i],p=world.y||0,phase=u+i*2.1;
+  h.hero.position.y=-1.9+Math.max(0,p)*.32+Math.abs(Math.sin(phase))*.07;
+  h.l.rotation.x=Math.sin(phase)*.52;
+  h.rr.rotation.x=-Math.sin(phase)*.52;
+ }
+ for(const ob of airportCockpit.userData.obstacles){
+  const dz=ob.worldX-world.x;
+  const z=-7.9-dz*.64;
+  ob.body.position.z=z;ob.handle.position.z=z;
+  ob.body.visible=dz>-3&&dz<60;ob.handle.visible=ob.body.visible;
+ }
+}
+
 function setup1(){
 clearWorld();scene.background=new THREE.Color('#7fa8c0');scene.fog=new THREE.Fog('#a6c2d0',48,175);sun.intensity=3.25;hemi.intensity=2.65;
 // The airport concourse is a substantial solid 3D floor instead of a near-invisible flat plane.
@@ -84,6 +164,7 @@ const obstacles=[];for(let i=0;i<17;i++){let x=7+i*5.6,z=(i%3-1)*2.5;obstacles.p
 const starItems=[];for(let i=0;i<20;i++){const x=8+i*4.8,z=[-3,0,3][i%3];const group=new THREE.Group();const tor=new THREE.Mesh(new THREE.TorusGeometry(.32,.1,8,5),new THREE.MeshStandardMaterial({color:'#ffcc60',metalness:.8,roughness:.2,emissive:'#d7a442',emissiveIntensity:.55}));group.add(tor);group.position.set(x,1.5,z);root.add(group);starItems.push({x,z,group,taken:false})}
 const player=human(0,0,'#e9a272',1,3),family=[human(-1.4,-1.6,'#82c6d0',.84,1),human(-2.7,1.6,'#e395b8',.77,6)];
 world={x:0,z:0,velocityY:0,y:0,time:75,health:3,inv:0,player,family,obstacles,starItems,length:106,stats:0};
+const foreground=buildAirportForeground();airportCockpit.userData.heroes=foreground.heroes;airportCockpit.userData.obstacles=foreground.obstacles;
 cam(-2,5.3,7.8,.7,1.25,0,true);
 }
 function makePipe(x){const metal=mat('#d6cad8',.7,.21);cylinder(.72,.72,4.2,metal,x,7.8,-5,20);const rim=cylinder(.8,.8,.24,'#f2e6f2',x,5.65,-5);rim.material=mat('#f8eff8',.7,.17);for(let j=0;j<8;j++)sphere(.22,candyColors[j%6],x+Math.sin(j*2)*.24,5.8+(j%3)*.17,-5+Math.cos(j*2)*.22,.2,.22)}
@@ -206,7 +287,7 @@ function update(dt){
 if(mode!=='play')return;elapsed+=dt;if(toastUntil&&elapsed>toastUntil){$('#notice').classList.remove('show');toastUntil=0}
 if(level===1)physics1(dt);if(level===2)physics2(dt);if(level===3)physics3(dt);
 }
-function animate(ts){const dt=Math.min(.04,(ts-last)/1000||0);last=ts;update(dt);renderer.render(scene,camera);requestAnimationFrame(animate)}
+function animate(ts){const dt=Math.min(.04,(ts-last)/1000||0);last=ts;update(dt);if(level===1&&mode==='play')updateAirportForeground(dt);renderer.render(scene,camera);requestAnimationFrame(animate)}
 function resize(){const w=Math.max(1,innerWidth),h=Math.max(1,innerHeight),mobile=h>w;renderer.setPixelRatio(Math.min(devicePixelRatio||1,mobile?1.5:2));renderer.setSize(w,h,false);camera.aspect=w/h;camera.fov=mobile?68:57;camera.updateProjectionMatrix()}
 window.addEventListener('resize',resize);
 const press=(name,value)=>{keys[name]=value;$('#'+name).classList.toggle('down',value)};
