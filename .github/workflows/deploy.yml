@@ -1,4 +1,4 @@
-name: Deploy NYC 2026 to GitHub Pages
+name: Deploy NYC Memories
 on:
   push:
     branches: [main]
@@ -12,27 +12,24 @@ concurrency:
   cancel-in-progress: true
 jobs:
   deploy:
+    runs-on: ubuntu-latest
     environment:
       name: github-pages
       url: ${{ steps.deployment.outputs.page_url }}
-    runs-on: ubuntu-latest
     steps:
-      - name: Checkout source
-        uses: actions/checkout@v4
-      - name: Set up Node.js
-        uses: actions/setup-node@v4
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
         with:
           node-version: '22'
-      - name: Validate game
+      - name: Smoke test
         run: node scripts/smoke-test.mjs
-      - name: Configure GitHub Pages
+      - name: Configure Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-      - name: Upload static game
-        uses: actions/upload-pages-artifact@v3
+      - uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Deploy website
-        id: deployment
+      - name: Deploy
         uses: actions/deploy-pages@v4
+        id: deployment

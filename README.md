@@ -1,28 +1,25 @@
-# NYC 2026 — Skyline Rush 3D
+# NYC Memories — Family Merge
 
-Original third-person **3D rooftop platformer** set in a stylized modern New York, built with Three.js and WebGL.
+An original, physics-based family vacation merge game inspired by the casual drop-and-merge genre.
 
-## Play online
-**https://stoffersen.github.io/Nyc2026/**
+## Play
+https://stoffersen.github.io/Nyc2026/
 
-GitHub Pages must be enabled at [Settings → Pages](https://github.com/Stoffersen/Nyc2026/settings/pages) with **GitHub Actions** selected as the source. Check [deployment logs](https://github.com/Stoffersen/Nyc2026/actions). The website requires an internet connection to load Three.js from jsDelivr.
+## How to play
+- Move your mouse, finger, or use the left/right arrow keys to aim.
+- Click, tap, press Space or Enter to drop a memory token.
+- Merge two matching memories into the next New York memory.
+- Keep the stack beneath the warning line.
+- Press R or tap "Nyt spil" to restart.
 
-## Game controls
-- A / D or left / right arrows: move along the skyline
-- Space / W / up arrow: jump, press again for double-jump
-- R: restart
-- P: pause / resume
-- Touchscreen: on-screen controls
+## Photos & privacy
+The game uses a **small, compressed collage** derived from the family vacation photos supplied by the project owner. It includes family members and recognizable New York vacation scenes. **This repository is public**. Do not deploy publicly if everyone depicted has not consented to publication. The bundled small image is only a lightweight gameplay sprite, not a substitute for original private photo archives. To remove family images, delete `assets/nyc-family-sprite.jpg` and the game falls back to emoji tokens.
 
-## Visual features
-True 3D buildings and rooftops, cinematic perspective camera, realistic material response using physically based rendering, shadow maps, atmospheric fog, glowing accents, animated drones, crystals, procedural Manhattan skyline and responsive mobile layout.
+## Features
+8 merge levels, real-time circular collisions, merge chains, particles, adaptive sizing, next-piece preview, best score in local storage, short synthesized audio, mobile and keyboard support.
 
-## Gameplay
-Traverse 16 rooftop sections, collect crystals, defeat drones by jumping on them, use checkpoints, and reach the portal. Three lives per run.
+## Technical notes
+No CDN dependencies. Open `index.html` in a modern browser. Run `node scripts/smoke-test.mjs` before publishing.
 
-## Development / verification
-Static entry point: `index.html`. Three.js is loaded as an ESM dependency from CDN.
-
-Run `node scripts/smoke-test.mjs` for HTML/game JavaScript structural checks. The GitHub Actions workflow runs that test before deploying. These are smoke checks, not a substitute for real-browser playtesting.
-
-This is an evolving prototype, not a finished commercial AAA release. All characters, game structures, and visual elements are original.
+## Development status
+Playable prototype, still requires physical device playtesting and art polish. No continuous unattended development process is running.
