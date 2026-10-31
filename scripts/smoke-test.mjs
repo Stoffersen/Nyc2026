@@ -19,6 +19,11 @@ assert.match(source,/new THREE.WebGLRenderer/);
 assert.match(source,/renderer\.shadowMap\.enabled=true/);
 assert.match(source,/THREE.ACESFilmicToneMapping/);
 assert.match(source,/new THREE.PerspectiveCamera/);
+assert.match(source,/cam\(-1\.8,5\.2,17,\.7,1\.5,0,true\)/,'Level 1 must spawn with family in camera view');
+assert.match(source,/const portrait=innerHeight>innerWidth/,'Camera should handle portrait iPhone screens');
+assert.match(source,/camera\.fov=mobile\?68:57/,'Portrait camera must widen the vertical view');
+assert.match(source,/Math\.min\(devicePixelRatio\|\|1,mobile\?1\.5:2\)/,'Render resolution should be capped for mobile');
+
 assert.match(source,/function attachPortrait\(/);
 assert.match(source,/assets\/nyc-family-sprite\.jpg/);
 assert.ok(source.includes('buildNYC(0);world={...world,stop:0,board:'));
