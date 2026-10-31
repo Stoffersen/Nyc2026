@@ -40,4 +40,12 @@
 <div id="loading">INDLÆSER NEW YORK I 3D …</div>
 </div>
 <script type="module" src="./game3d.js"></script>
+<script>
+window.addEventListener('load',()=>setTimeout(()=>{
+ const loader=document.getElementById('loading');
+ if(loader&&!loader.classList.contains('hidden')){
+  loader.innerHTML='<div style="max-width:450px;padding:28px;text-align:center;line-height:1.7">3D-spillet kunne ikke indlæses. Browseren skal understøtte WebGL og kunne hente Three.js.<p><a href="legacy-2d.html" style="display:inline-block;color:#152d42;background:#ffd090;padding:12px 20px;border-radius:13px;font-weight:900;text-decoration:none">Spil den tidligere 2D-version</a></p></div>';
+ }
+},10000));
+</script>
 </body></html>
