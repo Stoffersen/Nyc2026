@@ -121,8 +121,8 @@ for(let i=0;i<10;i++){lamp(i*5-25,7.5);box(1.1,.35,2,'#31404b',i*5-24,.22,7.5)}
 for(let j=0;j<2;j++){const taxi=box(3.4,.9,1.7,'#ffbd30',-14+j*22,.65,3,.2,.35);box(1.75,.78,1.55,'#e2b253',taxi.position.x,1.4,3)}
 if(stop===0){cylinder(.8,1,5.7,'#7eb3a4',-16,3,-6);sphere(.85,'#7eb3a4',-16,6.5,-6);box(.35,2,.35,'#81c1a7',-15.1,7.4,-6);sign('LIBERTY HARBOR',0,6.5,-11,10,1.5)}
 if(stop===1){const pool=box(8,.18,8,'#1c4055',-7,.18,-5);for(let k=0;k<14;k++)box(.13,.1,7.4,'#6abacf',-10.5+k*.52,.33,-5);sign('9/11 MEMORIAL',5,7,-11,9,1.5)}
-if(stop===2){sign('CHINATOWN · NYC',0,8,-11,11,1.8,'#ffe1a2','#912c30');for(let x=-14;x<=14;x+=7){for(let y=3;y<=8;y+=2){glowSphere(x,y,-6,'#e74238',.38);glowSphere(x+.8,y,-6,'#efc857',.16)}}}
-if(stop===3){sign('MADISON SQUARE GARDEN',0,8,-11,13,1.8,'#edfdff','#173d87');for(let i=0;i<8;i++)glowSphere(i*4-16,7,-6,i%2?'#ec75a9':'#6bc5ef',.3)}
+if(stop===2){sign('CHINATOWN · NYC',0,8,-11,11,1.8,true,'#ffe1a2','#912c30');for(let x=-14;x<=14;x+=7){for(let y=3;y<=8;y+=2){glowSphere(x,y,-6,'#e74238',.38);glowSphere(x+.8,y,-6,'#efc857',.16)}}}
+if(stop===3){sign('MADISON SQUARE GARDEN',0,8,-11,13,1.8,true,'#edfdff','#173d87');for(let i=0;i<8;i++)glowSphere(i*4-16,7,-6,i%2?'#ec75a9':'#6bc5ef',.3)}
 const family=[human(-4,3,'#e8a28a',1,3),human(-2.5,3,'#77bdcf',.87,1),human(-1,3,'#eaa6c5',.87,6)];
 world.family=family;cam(12,12,23,0,2,-3,true);
 }
@@ -183,7 +183,7 @@ function solve(){
 if(level!==3||mode!=='play'||world.moving)return;const g=world,p=g.puzzles[g.floor],sum=p.v.reduce((v,x,i)=>v+(g.selected[i]?x:0),0);
 if(sum===p.goal){g.floor++;g.selected=[false,false,false];g.goalY=g.floor*11;g.moving=true;addScore(250);showToast('DING! ETAGE '+g.floor);beep(870,.18);$('#puzzle').classList.add('hidden');if(g.floor>=6){setTimeout(()=>{if(mode==='play'&&level===3){addScore(600);win()}},1600)}else{setTimeout(()=>{if(mode==='play'&&level===3){g.moving=false;$('#puzzle').classList.remove('hidden');renderPuzzle()}},1300)}}else{$('#puzzleMsg').textContent='SUMMEN ER '+sum+' – PRØV IGEN!';beep(220)}
 }
-function physics3(dt){const g=world;if(!g.moving)return;g.liftY+=(g.goalY-g.liftY)*Math.min(1,dt*3);g.cabin.position.y=g.liftY+.4;$('#progressFill').style.width=(g.floor/6*100)+'%';cam(10,g.liftY+8,16,0,g.liftY+3,0);$('#status').textContent='ETAGE '+g.floor+' / 6'}
+function physics3(dt){const g=world;if(!g.moving)return;g.liftY+=(g.goalY-g.liftY)*Math.min(1,dt*3);g.cabin.position.y=g.liftY+.4;for(const member of g.family)member.position.y=g.liftY;$('#progressFill').style.width=(g.floor/6*100)+'%';cam(10,g.liftY+8,16,0,g.liftY+3,0);$('#status').textContent='ETAGE '+g.floor+' / 6'}
 function foodSpawn(){if(level!==4||mode!=='play')return;const g=world,free=g.board.map((x,i)=>x<0?i:-1).filter(i=>i>=0);if(!free.length){showToast('MERGE BRIKKER FOR AT FÅ PLADS');return}const i=free[Math.floor(Math.random()*free.length)];g.board[i]=Math.random()<.25?1:0;g.generated++;beep(360);updateFoodUI()}
 function foodSelect(i){if(level!==4||mode!=='play'||world.board[i]<0)return;const g=world;
 if(g.selection<0){g.selection=i;beep(350)}else if(g.selection===i)g.selection=-1;else if(g.board[g.selection]===g.board[i]&&g.board[i]<5){g.board[i]++;g.board[g.selection]=-1;g.selection=-1;g.merges++;addScore(80*(g.board[i]+1));showToast('PERFEKT MERGE!');beep(650)}else g.selection=i;
