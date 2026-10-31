@@ -1,0 +1,129 @@
+<!doctype html>
+<html lang="da">
+<head>
+<meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#060d1c">
+<title>NYC 2026 | Skyline Rush 3D — 2026 Edition</title>
+<style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#080e19;font-family:Inter,ui-sans-serif,system-ui,Arial;color:white}canvas{display:block;touch-action:none}
+#hud{position:fixed;inset:0 0 auto;display:flex;justify-content:space-between;align-items:flex-start;padding:22px 26px;pointer-events:none;text-shadow:0 2px 15px #001}
+.logo{font-size:clamp(19px,2.5vw,30px);font-weight:950;letter-spacing:-.07em}.logo b{color:#61e4ef}.sub{letter-spacing:.3em;font-size:10px;font-weight:700;color:#a4b7d0;margin-top:3px}.hudstats{display:flex;gap:12px;font-weight:850}.stat{padding:10px 17px;background:#071529aa;border:1px solid #8de4f233;border-radius:12px;backdrop-filter:blur(12px)}#progress{position:fixed;left:25px;right:25px;top:95px;height:4px;background:#ffffff25;border-radius:3px;pointer-events:none}#progress i{display:block;width:0;height:100%;background:linear-gradient(90deg,#64eaff,#ff81c2);box-shadow:0 0 16px #50e8ff;border-radius:3px}
+#overlay{position:fixed;inset:0;display:grid;place-items:center;background:linear-gradient(120deg,#050a19d9,#13172bc5);backdrop-filter:blur(9px);z-index:10;padding:20px}
+.panel{max-width:680px;text-align:center;padding:clamp(26px,5vw,60px);background:linear-gradient(135deg,#17253adc,#091421ed);border:1px solid #ffffff30;border-radius:25px;box-shadow:0 40px 120px #0009}
+.eyebrow{font-size:12px;letter-spacing:.3em;font-weight:800;color:#76e8f7}.panel h1{margin:14px 0;font-size:clamp(43px,7vw,85px);font-weight:950;line-height:.95;letter-spacing:-.07em}.panel h1 span{color:#6ce8f4}.panel p{line-height:1.65;color:#c9d7e9;font-size:15px;max-width:490px;margin:20px auto 26px}button{cursor:pointer;border:0;color:white;font-weight:900;background:linear-gradient(110deg,#17b9d7,#476af3);border-radius:12px;padding:16px 37px;font-size:16px;box-shadow:0 14px 40px #0ba8ff50}button:hover{filter:brightness(1.1)}.hint{margin-top:24px;color:#a2b4cf;font-size:12px}
+#touch{position:fixed;bottom:25px;left:22px;right:22px;display:none;justify-content:space-between;pointer-events:none}.buttons{display:flex;gap:13px}.touch{pointer-events:auto;width:70px;height:70px;padding:0;font-size:27px;background:#102b46b9;border:1px solid #ffffff55;border-radius:18px;touch-action:none;user-select:none}
+#loading{position:fixed;bottom:18px;left:50%;transform:translateX(-50%);font-size:12px;letter-spacing:.12em;color:#bbddf2;pointer-events:none}
+@media(pointer:coarse){#touch{display:flex}}@media(max-width:600px){#hud{padding:14px}#progress{top:75px;left:14px;right:14px}.stat{padding:8px 10px;font-size:13px}.hudstats{gap:5px}.sub{font-size:8px}}
+</style>
+</head><body>
+<div id="hud"><div><div class="logo">NYC <b>2026</b></div><div class="sub">SKYLINE RUSH 3D</div></div><div class="hudstats"><div class="stat" id="gems">◆ 0 / 0</div><div class="stat" id="health">♥ ♥ ♥</div></div></div>
+<div id="progress"><i id="bar"></i></div>
+<div id="overlay"><div class="panel"><div class="eyebrow">A NEW YORK ROOFTOP ADVENTURE</div><h1 id="title">SKYLINE<br><span>RUSH.</span></h1><p id="intro">Spring mellem skyskrabernes hustage, undvig patruljedroner og saml energikrystaller på din vej gennem Manhattan. En ny tredimensionel platformoplevelse.</p><button id="play">START EVENTYRET →</button><div class="hint">A / D eller ← / →: løb · SPACE: dobbelt-hop · R: genstart · P: pause</div></div></div>
+<div id="touch"><div class="buttons"><button class="touch" data-key="ArrowLeft">←</button><button class="touch" data-key="ArrowRight">→</button></div><div class="buttons"><button class="touch" data-key="Space">↑</button></div></div>
+<div id="loading">LOADER 3D-VERDEN …</div>
+<script type="module">
+import * as THREE from 'https://cdn.jsdelivr.net/npm/three@0.170.0/build/three.module.js';
+const $=s=>document.querySelector(s);
+const scene=new THREE.Scene();scene.background=new THREE.Color(0x101f38);scene.fog=new THREE.FogExp2(0x14243d,.0075);
+const camera=new THREE.PerspectiveCamera(58,innerWidth/innerHeight,.1,1250);
+const renderer=new THREE.WebGLRenderer({antialias:true,powerPreference:'high-performance'});
+renderer.setPixelRatio(Math.min(devicePixelRatio,2));renderer.setSize(innerWidth,innerHeight);renderer.shadowMap.enabled=true;renderer.shadowMap.type=THREE.PCFSoftShadowMap;renderer.outputColorSpace=THREE.SRGBColorSpace;renderer.toneMapping=THREE.ACESFilmicToneMapping;renderer.toneMappingExposure=1.55;document.body.prepend(renderer.domElement);
+scene.add(new THREE.HemisphereLight(0xb6daff,0x23314e,2.25));
+const sun=new THREE.DirectionalLight(0xffc9b1,3.25);sun.position.set(-55,95,-80);sun.castShadow=true;sun.shadow.mapSize.set(2048,2048);sun.shadow.camera.left=-90;sun.shadow.camera.right=90;sun.shadow.camera.top=90;sun.shadow.camera.bottom=-90;sun.shadow.normalBias=.025;scene.add(sun);
+const rim=new THREE.DirectionalLight(0x4edcf7,2.6);rim.position.set(20,25,55);scene.add(rim);
+const materials={
+concrete:new THREE.MeshStandardMaterial({color:0x334659,roughness:.87,metalness:.12}),
+roof:new THREE.MeshStandardMaterial({color:0x56677a,roughness:.72,metalness:.24}),
+trim:new THREE.MeshStandardMaterial({color:0x46ccdf,emissive:0x0daac5,emissiveIntensity:1.4,metalness:.7,roughness:.24}),
+dark:new THREE.MeshStandardMaterial({color:0x102338,metalness:.5,roughness:.5}),
+glass:new THREE.MeshStandardMaterial({color:0x527d9d,emissive:0x1d425d,emissiveIntensity:.45,metalness:.72,roughness:.23}),
+pink:new THREE.MeshStandardMaterial({color:0xff5eaa,emissive:0xd62c8e,emissiveIntensity:2}),
+gold:new THREE.MeshStandardMaterial({color:0xffdf87,emissive:0xffa020,emissiveIntensity:2.8,metalness:.65,roughness:.2}),
+white:new THREE.MeshStandardMaterial({color:0xe5f4ff,roughness:.42}),
+cloth:new THREE.MeshStandardMaterial({color:0x19a6d2,roughness:.62}),
+skin:new THREE.MeshStandardMaterial({color:0xe9a88f,roughness:.75}),
+hair:new THREE.MeshStandardMaterial({color:0x1e253b,roughness:.72}),
+street:new THREE.MeshStandardMaterial({color:0x141d30,roughness:.95})
+};
+const boxGeo=new THREE.BoxGeometry(1,1,1);
+function box(w,h,d,mat,x,y,z,parent=scene){const m=new THREE.Mesh(boxGeo,mat);m.scale.set(w,h,d);m.position.set(x,y,z);m.castShadow=true;m.receiveShadow=true;parent.add(m);return m}
+function textTexture(words,fg='#e8ffff',bg='#12334c'){const c=document.createElement('canvas');c.width=512;c.height=160;const g=c.getContext('2d');g.fillStyle=bg;g.fillRect(0,0,512,160);g.strokeStyle=fg;g.lineWidth=8;g.strokeRect(5,5,502,150);g.fillStyle=fg;g.font='900 72px Arial';g.textAlign='center';g.textBaseline='middle';g.fillText(words,256,84);const t=new THREE.CanvasTexture(c);t.colorSpace=THREE.SRGBColorSpace;return t}
+const skyMat=new THREE.MeshBasicMaterial({color:0x365b7b,side:THREE.BackSide});
+const ground=box(1600,1,240,materials.street,450,-62,-10);
+const roadMarks=new THREE.MeshStandardMaterial({color:0x80919a,roughness:1});
+for(let x=-100;x<1300;x+=18)box(7,.06,.5,roadMarks,x,-61.45,25);
+const platforms=[
+[0,18,42],[26,17,22],[53,22,34],[94,19,31],[134,26,35],[176,20,31],[216,24,35],[260,17,30],[305,21,36],[349,27,36],[395,20,32],[440,26,34],[488,18,34],[532,23,38],[581,19,37],[629,27,45]
+].map(([x,y,w],i)=>({x,y,w,i,left:x-w/2,right:x+w/2}));
+const END=647,world=new THREE.Group();scene.add(world);
+function roofBuilding(p){const bottom=-60;const h=p.y-bottom;box(p.w,h,25,materials.concrete,p.x,bottom+h/2,-2,world);box(p.w+.7,1.3,26.5,materials.roof,p.x,p.y-.65,-2,world);
+box(p.w, .22, .36,materials.trim,p.x,p.y+.07,11.05,world);
+for(let x=p.left+3;x<p.right-2;x+=5.3){for(let y=-44;y<p.y-5;y+=8.3){if((Math.round(x*11+y*3)%7+7)%7===0)continue;box(2.15,3.6,.12,materials.glass,x,y,10.55,world)}}
+if(p.i%3===1){box(5,3,5,materials.dark,p.x+2,p.y+1.5,-6,world);box(4,.22,4,materials.trim,p.x+2,p.y+3.1,-6,world)}
+if(p.i%4===2){const side=box(8,2.4,.1,new THREE.MeshBasicMaterial({map:textTexture(['NYC','DREAM','24/7','METRO'][p.i%4])}),p.x,p.y+6,-10,world);side.rotation.y=0}
+}
+platforms.forEach(roofBuilding);
+const rng=(n)=>{let v=Math.sin(n*127.1+9.11)*43758.5453;return v-Math.floor(v)};
+for(let row=0;row<4;row++){for(let i=0;i<115;i++){const x=-180+i*9.1+(rng(i*19+row)*6),z=-45-row*27-(rng(i*2)*10);if(row===0&&i%3===0)continue;const h=25+rng(i*4+row*7)*105;const building=box(5+rng(i*13+row)*9,h,8+rng(i*12)*7,row%2?materials.dark:materials.concrete,x,h/2-61,z);building.castShadow=false;
+if(i%11===0){box(.5,4,.5,materials.trim,x,h-59,z)}
+for(let y=-45;y<h-65;y+=11){if(rng(i*83+y)> .32)box(1.5,3,.12,materials.glass,x-1,y,z+4.15)}
+}}
+const moon=new THREE.Mesh(new THREE.SphereGeometry(18,32,24),new THREE.MeshBasicMaterial({color:0xffd3b5}));moon.position.set(90,155,-260);scene.add(moon);
+const stars=new THREE.BufferGeometry(),starPos=[];for(let i=0;i<420;i++)starPos.push(rng(i*4)*1200-150,75+rng(i*3+1)*200,-180-rng(i*7)*200);stars.setAttribute('position',new THREE.Float32BufferAttribute(starPos,3));const points=new THREE.Points(stars,new THREE.PointsMaterial({color:0xe4efff,size:.8,sizeAttenuation:true}));scene.add(points);
+const hero=new THREE.Group();world.add(hero);
+const body=box(1.85,2.65,1.35,materials.cloth,0,2.2,0,hero);const head=new THREE.Mesh(new THREE.SphereGeometry(.95,18,14),materials.skin);head.position.set(0,4.3,0);head.castShadow=true;hero.add(head);
+const hair=new THREE.Mesh(new THREE.SphereGeometry(.98,18,14,0,Math.PI*2,0,Math.PI*.56),materials.hair);hair.position.set(0,4.5,0);hero.add(hair);
+const eyes=box(1.48,.36,.15,materials.dark,0,4.47, .91,hero);
+const jacketStripe=box(1.75,.24,.1,materials.trim,0,2.85,.7,hero);
+const armL=box(.6,2,.7,materials.skin,-1.31,2.3,0,hero),armR=box(.6,2,.7,materials.skin,1.31,2.3,0,hero);
+const legL=box(.65,1.5,.82,materials.dark,-.51,.35,0,hero),legR=box(.65,1.5,.82,materials.dark,.51,.35,0,hero);
+const marker=new THREE.Mesh(new THREE.CircleGeometry(1.5,24),new THREE.MeshBasicMaterial({color:0x4cebf2,transparent:true,opacity:.28,depthWrite:false}));marker.rotation.x=-Math.PI/2;world.add(marker);
+const crystalGeo=new THREE.OctahedronGeometry(1.3),gems=[];
+platforms.forEach((p,i)=>{if(!i)return;let count=p.w>35?4:3;for(let j=0;j<count;j++){const x=p.left+4+(j+.3)*(p.w-8)/count;const mesh=new THREE.Mesh(crystalGeo,materials.gold);mesh.position.set(x,p.y+4,1);mesh.castShadow=true;world.add(mesh);gems.push({x,y:p.y+4,mesh,taken:false,phase:i+j})}});
+const drones=[];for(const i of [2,4,6,8,10,12,14]){const p=platforms[i],g=new THREE.Group();world.add(g);const orb=new THREE.Mesh(new THREE.SphereGeometry(1.7,20,16),materials.dark);orb.castShadow=true;g.add(orb);box(3.7,.37,.8,materials.pink,0,0,.8,g);box(6,.17,.65,materials.glass,0,.3,0,g);drones.push({g,x:p.x,y:p.y+5,base:p.x,phase:i*2.3,alive:true})}
+const goal=new THREE.Group();world.add(goal);goal.position.set(END,platforms.at(-1).y+5,-1);
+const pillarMat=new THREE.MeshStandardMaterial({color:0x5ecadd,emissive:0x06bddc,emissiveIntensity:2,metalness:.5,roughness:.15});
+box(1,10,1,pillarMat,-5,0,0,goal);box(1,10,1,pillarMat,5,0,0,goal);box(11,1,1,pillarMat,0,5,0,goal);
+const portal=new THREE.Mesh(new THREE.PlaneGeometry(9,9),new THREE.MeshBasicMaterial({color:0x3ae1ff,transparent:true,opacity:.22,side:THREE.DoubleSide,depthWrite:false}));portal.position.y=0;goal.add(portal);
+const controls=new Set();let state='menu',score=0,lives=3,checkpoint=0,px=0,py=18,pvx=0,pvy=0,grounded=true,canDouble=true,jumpQueued=false,invincible=0,elapsed=0,shake=0,last=performance.now();
+function hud(){$('#gems').textContent='◆ '+score+' / '+gems.length;$('#health').textContent='♥ '.repeat(Math.max(lives,0));$('#bar').style.width=Math.min(100,px/END*100)+'%'}
+function reset(){score=0;lives=3;checkpoint=0;px=0;py=18;pvx=0;pvy=0;grounded=true;canDouble=true;invincible=0;elapsed=0;drones.forEach(e=>{e.alive=true;e.g.visible=true});gems.forEach(c=>{c.taken=false;c.mesh.visible=true});hero.visible=true;hud()}
+function overlay(title,desc,button){state='menu';$('#title').innerHTML=title;$('#intro').textContent=desc;$('#play').textContent=button;$('#overlay').style.display='grid'}
+function start(){reset();state='play';$('#overlay').style.display='none';last=performance.now()}
+$('#play').addEventListener('click',start);
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','ArrowUp','Space'].includes(e.code))e.preventDefault();if(!controls.has(e.code)&&['Space','ArrowUp','KeyW'].includes(e.code))jumpQueued=true;controls.add(e.code);if(e.code==='KeyR')start();if(e.code==='KeyP'&&state!=='menu')state=state==='pause'?'play':'pause'});
+addEventListener('keyup',e=>controls.delete(e.code));addEventListener('blur',()=>{controls.clear();if(state==='play')state='pause'});
+document.querySelectorAll('.touch').forEach(b=>{const k=b.dataset.key;b.addEventListener('pointerdown',e=>{e.preventDefault();b.setPointerCapture(e.pointerId);controls.add(k);if(k==='Space')jumpQueued=true});for(const name of ['pointerup','pointercancel','lostpointercapture'])b.addEventListener(name,()=>controls.delete(k))});
+function damage(){if(invincible>0||state!=='play')return;lives--;invincible=1.7;shake=.35;hud();if(lives<=0){overlay('GAME <span>OVER.</span>','Manhattans hustage vandt denne gang. Prøv en ny rute og nå frem til portalen.','PRØV IGEN →');return}px=platforms[checkpoint].x;py=platforms[checkpoint].y+2;pvy=0;pvx=0}
+function update(dt){elapsed+=dt;for(const c of gems){if(c.taken)continue;c.mesh.rotation.y+=dt*2.2;c.mesh.position.y=c.y+Math.sin(elapsed*3+c.phase)*.55}
+for(const e of drones){if(!e.alive)continue;e.x=e.base+Math.sin(elapsed*1.5+e.phase)*5;e.g.position.set(e.x,e.y+Math.sin(elapsed*2.7+e.phase)*1.25,0);e.g.rotation.y+=dt}
+if(state!=='play')return;
+invincible=Math.max(0,invincible-dt);shake=Math.max(0,shake-dt);
+let move=Number(controls.has('ArrowRight')||controls.has('KeyD'))-Number(controls.has('ArrowLeft')||controls.has('KeyA'));
+const target=move*20;pvx+=(target-pvx)*Math.min(1,dt*(grounded?11:6));
+if(jumpQueued){if(grounded){pvy=24;grounded=false;canDouble=true}else if(canDouble){pvy=22;canDouble=false}jumpQueued=false}
+const oldY=py;const oldX=px;pvy=Math.max(-48,pvy-59*dt);px=Math.max(-4,Math.min(END+4,px+pvx*dt));py+=pvy*dt;grounded=false;
+for(const p of platforms){if(pvy<=0&&oldY>=p.y-.12&&py<=p.y&&px>=p.left-1.1&&px<=p.right+1.1){py=p.y;pvy=0;grounded=true;canDouble=true;break}}
+if(py<-35)damage();
+for(const c of gems){if(!c.taken&&Math.abs(px-c.x)<2.35&&Math.abs(py+2.8-c.mesh.position.y)<3.6){c.taken=true;c.mesh.visible=false;score++;hud()}}
+for(const e of drones){if(!e.alive)continue;const yy=e.g.position.y;if(Math.abs(px-e.x)<2.9&&Math.abs(py+2.5-yy)<3.4){if(pvy< -3&&py+1.2>yy){e.alive=false;e.g.visible=false;pvy=17}else damage()}}
+if(px>platforms[4].x&&checkpoint<4)checkpoint=0;
+if(px>platforms[8].x&&checkpoint<8)checkpoint=8;
+if(px>platforms[12].x&&checkpoint<12)checkpoint=12;
+if(px>=END-2){overlay('CITY <span>CONQUERED.</span>','Du gennemførte Skyline Rush og samlede '+score+' af '+gems.length+' krystaller.','SPIL IGEN →')}
+hero.position.set(px,py,0);hero.rotation.y=THREE.MathUtils.lerp(hero.rotation.y,move<0?Math.PI:0,Math.min(1,dt*12));
+hero.visible=invincible===0||Math.floor(elapsed*13)%2===0;
+hero.rotation.z=THREE.MathUtils.lerp(hero.rotation.z,-pvx*.007,.12);
+const stride=grounded?Math.sin(elapsed*17*Math.min(1,Math.abs(pvx)/12))*.55:0;legL.rotation.z=stride;legR.rotation.z=-stride;armL.rotation.z=-stride*.6;armR.rotation.z=stride*.6;
+marker.position.set(px,py+.08,0);marker.visible=grounded;hud();
+}
+const targetPos=new THREE.Vector3(),lookAt=new THREE.Vector3();
+function render(t){let dt=Math.min(.04,(t-last)/1000);last=t;update(dt);
+const mobile=innerWidth<800;targetPos.set(px+(mobile?2:0),py+(mobile?15:19),mobile?39:49);
+camera.position.lerp(targetPos,1-Math.exp(-dt*3.4));lookAt.set(px+(mobile?4:9),py+5,0);camera.lookAt(lookAt);
+if(shake>0){camera.position.x+=(Math.random()-.5)*shake*1.8;camera.position.y+=(Math.random()-.5)*shake*1.8}
+renderer.render(scene,camera);requestAnimationFrame(render)}
+function resize(){camera.aspect=innerWidth/innerHeight;camera.fov=innerWidth<650?72:58;camera.updateProjectionMatrix();renderer.setSize(innerWidth,innerHeight);renderer.setPixelRatio(Math.min(devicePixelRatio,2))}
+addEventListener('resize',resize);resize();hero.position.set(0,18,0);camera.position.set(0,36,49);camera.lookAt(5,20,0);$('#loading').remove();hud();requestAnimationFrame(render);
+</script>
+</body></html>
