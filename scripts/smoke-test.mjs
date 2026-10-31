@@ -43,6 +43,9 @@ for(let n=0;n<4;n++){
  for(let i=1;i<=32;i++){const next=scheduled;next((10+n*40+i)*16.67)}
 }
 assert.ok(elements.get('#score').textContent!==undefined,'Score UI missing');
+assert.ok(events['#volume:input'],'Missing music volume slider');
+events['#volume:input']({target:{value:90}});
+assert.equal(storage.get('nyc-merge-volume-v1'),'90');
 assert.ok(events['#music:click'],'Missing separate music toggle');
 events['#music:click']();assert.equal(elements.get('#music').textContent,'♫ Fra');
 assert.equal(storage.get('nyc-merge-music-v1'),'off');
@@ -63,4 +66,4 @@ assert.ok(events['window:resize'],'Missing device rotation handler');
 events['window:resize']();
 for(let i=0;i<15;i++){const next=scheduled;next((185+i)*16.67)}
 
-console.log('PASS: HTML structure, sprite, syntax, interactive game loop, drop controls, music controls, pause, photo album, resize and render.');
+console.log('PASS: HTML structure, sprite, syntax, interactive game loop, drop controls, music volume, separate music/SFX controls, pause, photo album, resize and render.');
