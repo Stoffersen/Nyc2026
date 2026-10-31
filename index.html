@@ -1,51 +1,196 @@
-<!doctype html>
-<html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#071421">
-<title>NYC FAMILY QUEST — 3D</title>
-<style>
-@import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;600;700;800&family=Outfit:wght@500;600;700;800;900&display=swap');
-:root{color-scheme:dark;--cream:#fff1d7;--accent:#ffbd7a;--sky:#9de0ff;--glass:rgba(11,25,43,.77);--border:rgba(218,234,255,.19)}
-*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#06101e;color:#fff;font-family:'DM Sans',ui-sans-serif,system-ui,sans-serif}button{font:inherit;cursor:pointer}button:focus-visible{outline:3px solid #ffe0a7;outline-offset:3px}
-#view{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}
-#vignette{pointer-events:none;position:fixed;inset:0;background:linear-gradient(0deg,#060e20e0 0%,#080f1f0a 21%,#080f1f00 75%,#08121e99 100%);z-index:1}
-#app{position:fixed;inset:0;z-index:2;pointer-events:none}
-#top{padding:20px clamp(16px,3vw,48px);display:flex;align-items:flex-start;justify-content:space-between;gap:12px}
-#brand{font:900 clamp(19px,3vw,30px)/1 'Outfit',sans-serif;letter-spacing:-.055em;text-shadow:0 3px 20px #0008}#brand span{color:#ffbe83}#subtitle{font-size:10px;letter-spacing:.26em;font-weight:800;margin-top:7px;color:#b9d2e2;text-shadow:0 3px 10px #000}
-#stats{display:flex;gap:10px}.stat{min-width:86px;border:1px solid var(--border);background:var(--glass);border-radius:14px;padding:10px 15px;text-align:center;backdrop-filter:blur(16px)}.stat small{display:block;color:#9fbfd5;font-size:9px;letter-spacing:.18em;font-weight:900}.stat strong{display:block;font:800 21px 'Outfit';margin-top:3px}
-#stageBox{position:absolute;left:clamp(16px,3vw,48px);top:106px;max-width:min(50vw,510px);filter:drop-shadow(0 4px 10px #000a)}#stageBox small{font-weight:900;color:#ffddad;font-size:11px;letter-spacing:.2em}#stageName{font:900 clamp(25px,4vw,49px)/1.04 'Outfit';letter-spacing:-.048em;margin:8px 0}#stageDesc{font-size:clamp(11px,1.2vw,14px);font-weight:700;color:#f3e9dc;line-height:1.55}
-#status{position:absolute;right:clamp(16px,3vw,48px);top:114px;text-align:right;font:800 clamp(13px,2vw,22px) 'Outfit';text-shadow:0 3px 18px #000}
-#progress{position:absolute;left:clamp(16px,3vw,48px);right:clamp(16px,3vw,48px);bottom:95px;height:5px;border-radius:10px;background:#ffffff45;overflow:hidden}#progressFill{height:100%;width:0%;background:linear-gradient(90deg,#8bf3da,#ffbf8a);box-shadow:0 0 16px #ffc983;transition:width .25s}
-#bottom{position:absolute;bottom:20px;left:0;right:0;display:flex;align-items:end;justify-content:space-between;padding:0 clamp(15px,3vw,48px);gap:15px}
-#tip{color:#d6dfe6;text-shadow:0 3px 10px #000;max-width:400px;font-size:12px;font-weight:700;line-height:1.55}
-#controls{display:flex;align-items:center;gap:9px;pointer-events:auto}.ctrl{touch-action:none;user-select:none;-webkit-user-select:none;border:1px solid #ffffff47;background:#122943c9;backdrop-filter:blur(15px);color:#fff;min-height:55px;min-width:60px;border-radius:16px;font-size:22px;font-weight:900;box-shadow:0 8px 20px #0008}.ctrl.action{font:800 13px 'Outfit';padding:0 19px;min-width:120px;background:#c47756f2;border-color:#ffc59b}.ctrl.down{background:#5685a7}
-#menuActions{pointer-events:auto;position:absolute;right:clamp(16px,3vw,48px);top:198px;display:flex;gap:7px}.minor{border:1px solid var(--border);border-radius:11px;padding:9px 12px;background:#10263db8;color:#f9eada;font-size:11px;font-weight:900}
-#panel{position:absolute;inset:0;display:grid;place-items:center;background:#051121bb;backdrop-filter:blur(15px);pointer-events:auto;padding:18px}
-#modal{width:min(600px,100%);padding:clamp(24px,5vw,52px);border:1px solid #b5d6ee55;border-radius:28px;background:linear-gradient(153deg,rgba(29,63,89,.96),rgba(8,22,41,.98));text-align:center;box-shadow:0 35px 140px #000b}
-#modal small{font-weight:900;letter-spacing:.24em;color:#ffd298;font-size:10px}#modal h1{font:900 clamp(36px,7vw,72px)/.95 'Outfit';letter-spacing:-.07em;margin:15px 0}#modal p{line-height:1.7;color:#c5d8e6;max-width:460px;margin:14px auto 25px;font-size:14px}#primary{border:0;border-radius:16px;padding:17px 30px;background:linear-gradient(115deg,#ffd18e,#ff8e9f);color:#182d42;font:900 16px 'Outfit';box-shadow:0 10px 35px #ffb27f4d}
-#chapterList{display:flex;gap:7px;margin:22px 0;justify-content:center}.chapter{width:24%;border-radius:12px;padding:10px 4px;background:#ffffff14;font-size:10px;line-height:1.5;color:#c9dce7}.chapter b{display:block;font-size:25px}.chapter.current{outline:1px solid #ffd49a;background:#ffc47623}.chapter.passed{background:#50bb9854}
-#puzzle{position:absolute;left:50%;top:53%;transform:translate(-50%,-50%);width:min(510px,90vw);pointer-events:auto;background:rgba(9,27,47,.89);border:1px solid #b9e4ff63;border-radius:22px;padding:22px 20px;text-align:center;box-shadow:0 30px 90px #000a;backdrop-filter:blur(15px)}#puzzle h2{font:900 22px 'Outfit';margin:0 0 6px}#puzzle p{font-size:12px;color:#abcadd}#goal{font:900 64px 'Outfit';color:#ffcf88}#switches{display:flex;justify-content:center;gap:10px;margin:12px 0 16px}#switches button{border:1px solid #c1e3ff70;border-radius:14px;width:81px;height:80px;background:#2b4863;color:white;font:900 30px 'Outfit'}#switches button.on{background:#7ad9ba;color:#113441;box-shadow:0 0 25px #71e4bc77}#runElevator,#deliver,#cook{border:0;border-radius:12px;padding:13px 18px;background:#ffca8c;color:#19314b;font:900 13px 'Outfit'}#puzzleMsg{min-height:20px;color:#ffdab0;font-size:12px}
-#cookUI{position:absolute;top:50%;left:50%;transform:translate(-50%,-47%);width:min(780px,96vw);display:grid;grid-template-columns:1fr 1.4fr 1fr;gap:13px;pointer-events:auto;align-items:center}#cookUI .pane{background:#0a1b32de;border:1px solid #b9daf95b;border-radius:18px;padding:16px;box-shadow:0 16px 40px #0008;backdrop-filter:blur(15px);text-align:center}#orderLabel{font-size:10px;font-weight:900;letter-spacing:.18em;color:#ffcb88}#orderFood{font-size:65px;line-height:1.3}#stopName{font:900 16px 'Outfit';margin:8px 0}#board{display:grid;grid-template-columns:repeat(4,1fr);gap:7px}.tile{aspect-ratio:1;background:linear-gradient(150deg,#54768f,#263e59);border:1px solid #ffffff55;border-radius:12px;font-size:clamp(22px,4vw,39px);color:#fff;min-width:0}.tile.selected{outline:3px solid #ffd18d;background:#d29b6d}.tile small{font-size:9px;display:block;color:#e7f1f8;font-weight:900}#cookUI .pane p{color:#bfcedc;font-size:11px;line-height:1.5}#deliver,#cook{display:block;width:100%;margin:8px 0}#cook{background:#8adbbf}#route{font-size:11px;color:#d2e8ed;font-weight:800;line-height:2.1}
-#notice{position:absolute;top:29%;left:50%;transform:translateX(-50%);pointer-events:none;opacity:0;text-shadow:0 4px 20px #000;font:900 clamp(16px,4vw,38px) 'Outfit';color:#ffe2a5;white-space:nowrap;transition:opacity .22s}#notice.show{opacity:1}.hidden{display:none!important}
-#loading{position:absolute;inset:0;display:grid;place-items:center;background:#071421;z-index:10;font:900 16px 'Outfit';color:#ddf2ff}
-@media(max-width:700px){#top{padding:12px}#brand{font-size:19px}#subtitle{font-size:7px}.stat{padding:7px 9px;min-width:62px}.stat strong{font-size:15px}#stageBox{top:77px;left:12px;max-width:66vw}#stageName{font-size:clamp(20px,5.2vw,26px);line-height:1.05;margin:5px 0}#stageDesc{font-size:10px;max-width:235px;line-height:1.35}#status{top:84px;right:12px;font-size:11px;background:#091c2ec4;border:1px solid #ffffff30;border-radius:9px;padding:7px 9px}#menuActions{top:190px;right:12px}#menuActions .minor{font-size:10px;padding:7px 9px}#progress{bottom:100px;left:12px;right:12px}#bottom{bottom:calc(12px + env(safe-area-inset-bottom));padding:0 12px;justify-content:center;align-items:end}#tip{display:none}.ctrl{min-width:56px;min-height:54px}#puzzle{top:55%;padding:14px 12px;width:min(420px,95vw)}#puzzle h2{font-size:16px}#goal{font-size:40px}#switches button{width:65px;height:65px}#cookUI{top:55%;grid-template-columns:1fr 1.7fr;gap:7px}#cookUI .pane{padding:9px;border-radius:12px}#cookUI .pane:last-child{grid-column:1/3;display:flex;align-items:center;gap:8px}#cookUI .pane:last-child p{display:none}#orderFood{font-size:42px}#stopName{font-size:12px}#cookUI .pane:last-child button{margin:0}#route{font-size:9px}#modal{padding:26px 17px}}
-@media(max-height:640px){#stageDesc,#tip{display:none}#stageBox{top:65px}#menuActions{top:150px}#bottom{bottom:10px}#progress{bottom:77px}#puzzle{top:51%}#cookUI{top:51%;transform:translate(-50%,-43%)}}
-</style></head><body>
-<canvas id="view"></canvas><div id="vignette"></div><div id="app">
-<div id="top"><div><div id="brand">NYC <span>FAMILY QUEST</span></div><div id="subtitle">THE NEW YORK CHRONICLES · REAL-TIME 3D</div></div><div id="stats"><div class="stat"><small>LEVEL</small><strong id="lv">1 / 4</strong></div><div class="stat"><small>POINT</small><strong id="score">0</strong></div></div></div>
-<div id="stageBox"><small id="chapterTag">LEVEL 1 · AIRPORT DASH</small><div id="stageName">Kapløbet til flyet</div><div id="stageDesc">Nå gaten, før flyet letter.</div></div><div id="status"></div>
-<div id="menuActions"><button class="minor" id="sound">♫ LYD</button><button class="minor" id="restart">↻ NYT SPIL</button></div><div id="notice"></div>
-<div id="puzzle" class="hidden"><h2>EMPIRE STATE · ELEVATOR CONTROL</h2><p>Aktivér energikredsløb, så summen matcher målet.</p><div id="goal">7</div><div id="switches"></div><button id="runElevator">KØR ELEVATOREN ↑</button><div id="puzzleMsg"></div></div>
-<div id="cookUI" class="hidden"><div class="pane"><div id="orderLabel">NÆSTE BESTILLING</div><div id="stopName">Frihedsgudinden</div><div id="orderFood">🥨</div><div id="orderText">Pretzel</div><p>Merge to ens retter for at låse nye retter op.</p></div><div class="pane"><div id="board"></div></div><div class="pane"><button id="cook">+ LAV MAD</button><button id="deliver">LEVER RET</button><div id="route">🗽 → 🌳 → 🏮 → 🏟️</div></div></div>
-<div id="progress"><div id="progressFill"></div></div><div id="bottom"><div id="tip">◀ ▶ Flyt familien · Hop over kufferter · På mobil bruges knapperne.</div><div id="controls"><button class="ctrl" id="left" aria-label="Venstre">◀</button><button class="ctrl" id="right" aria-label="Højre">▶</button><button class="ctrl action" id="action">HOP</button></div></div>
-<div id="panel"><div id="modal"><small id="modalTag">NEW YORK, HERE WE COME</small><h1 id="modalTitle">THE FAMILY<br>ADVENTURE</h1><p id="modalDesc">Fire filmiske 3D-levels: lufthavnen, Ditte i M&M’S-butikken, Empire State-elevatoren og en madrejse gennem Manhattan.</p><div id="chapterList"><div class="chapter current"><b>✈️</b>LUFTHAVN</div><div class="chapter"><b>🍬</b>DITTE</div><div class="chapter"><b>🏙️</b>ELEVATOR</div><div class="chapter"><b>🍕</b>FOOD QUEST</div></div><button id="primary">START EVENTYRET →</button></div></div>
-<div id="loading">INDLÆSER NEW YORK I 3D …</div>
+<!doctype html><html lang="da"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><meta name="theme-color" content="#101b32"><title>NYC Memories — Family Merge</title><style>
+*{box-sizing:border-box}html,body{margin:0;width:100%;height:100%;overscroll-behavior:none;background:#0d1728;color:#fff;font-family:Inter,ui-sans-serif,system-ui,Arial,sans-serif}body{overflow:hidden}button{font:inherit;cursor:pointer;border:0}#scene{position:fixed;inset:0;width:100%;height:100%;display:block;touch-action:none}#app{position:fixed;inset:0;pointer-events:none}#top{display:flex;justify-content:space-between;gap:16px;max-width:1180px;margin:0 auto;padding:20px 24px;align-items:flex-start}.wordmark{font-size:clamp(17px,3vw,27px);font-weight:950;letter-spacing:-.06em;line-height:1}.wordmark span{color:#ffb86d}.eyebrow{color:#a5bbd4;font-size:10px;letter-spacing:.26em;font-weight:800;margin-top:7px}.scorebar{display:flex;gap:9px;align-items:center}.pill{background:#12253cc9;border:1px solid #b0daf129;border-radius:15px;padding:9px 16px;backdrop-filter:blur(14px);text-align:center;min-width:80px}.pill small{display:block;color:#8fb0ce;font-size:10px;font-weight:800;letter-spacing:.14em}.pill strong{font-size:19px;font-weight:900;font-variant-numeric:tabular-nums}#bottom{position:absolute;bottom:14px;left:0;right:0;display:flex;align-items:end;justify-content:center;gap:10px;pointer-events:none}.ctrl{pointer-events:auto;background:#12283fe6;border:1px solid #beeaff44;color:#dfedfc;border-radius:14px;padding:10px 16px;font-size:13px;font-weight:800;min-height:44px;box-shadow:0 8px 26px #03091255}#mute,#music{min-width:48px}#volume{width:78px;pointer-events:auto;accent-color:#ffc27f;vertical-align:middle;cursor:pointer}#soundStatus{position:absolute;bottom:70px;left:50%;transform:translateX(-50%);font-size:11px;color:#fbd4a7;text-shadow:0 2px 10px #000;text-align:center;pointer-events:none;white-space:nowrap}@media(max-width:700px){#volume{width:52px}#soundStatus{bottom:69px;font-size:10px}}#music[aria-pressed="false"]{opacity:.66}.how{font-size:12px;color:#b8cde4;align-self:center;margin:0 15px;text-align:center}.panelBG{position:absolute;inset:0;background:#071322cf;backdrop-filter:blur(12px);display:grid;place-items:center;pointer-events:auto;padding:18px;z-index:4}.panel{width:min(540px,100%);text-align:center;border:1px solid #ffffff30;border-radius:28px;background:linear-gradient(150deg,#203e5c,#101c32);padding:clamp(25px,6vw,48px);box-shadow:0 35px 130px #020812d9}.kicker{color:#f8bd83;letter-spacing:.3em;font-size:11px;font-weight:900}.panel h1{font-weight:1000;font-size:clamp(44px,10vw,82px);letter-spacing:-.08em;line-height:.96;margin:15px 0}.panel h1 em{color:#ffb86d;font-style:normal}.panel p{color:#bfd2e5;font-size:15px;line-height:1.7;margin:17px auto 27px;max-width:390px}.primary{border-radius:16px;background:linear-gradient(110deg,#ff9f66,#f56e93);padding:17px 30px;color:#202039;font-weight:950;font-size:16px;box-shadow:0 14px 38px #ff806044}.panel .small{font-size:12px;color:#849ebd;margin-top:22px}.hidden{display:none!important}#notice{position:absolute;top:114px;left:50%;transform:translateX(-50%);opacity:0;transition:opacity .3s;font-weight:900;color:#ffe2ab;text-shadow:0 3px 15px #000;white-space:nowrap}#notice.show{opacity:1}#photos{position:absolute;left:20px;bottom:77px;max-width:195px;padding:12px;border-radius:18px;background:#13283dbd;border:1px solid #ffffff24;backdrop-filter:blur(12px);font-size:12px;line-height:1.5;color:#b5cee4}#photos b{display:block;color:white;font-size:13px;margin-bottom:3px}
+#collection{position:absolute;right:20px;bottom:77px;max-width:210px;width:210px;padding:15px;border-radius:18px;background:#13283ddd;border:1px solid #ffffff33;backdrop-filter:blur(15px);box-shadow:0 16px 40px #07132233}
+#collection .label{color:#a7c0d7;font-size:10px;font-weight:900;letter-spacing:.18em}
+#collection .memory{color:#fff;margin-top:5px;font-size:16px;font-weight:900}
+#collection .track{height:5px;margin-top:12px;background:#ffffff21;border-radius:6px;overflow:hidden}
+#collection .track i{display:block;width:0;height:100%;background:linear-gradient(90deg,#f9bb74,#fa72a4);border-radius:6px;transition:width .28s}
+#collection .subtext{font-size:11px;color:#abc5d9;margin-top:7px}
+#album{position:absolute;inset:0;z-index:7;pointer-events:auto;display:grid;place-items:center;padding:16px;background:#071322dd;backdrop-filter:blur(16px)}
+.albumPanel{width:min(660px,100%);max-height:min(770px,90dvh);overflow:auto;padding:25px;border-radius:24px;background:#12293e;border:1px solid #ffffff32;box-shadow:0 35px 120px #0009}
+.albumPanel h2{margin:0 0 5px;font-size:30px;letter-spacing:-.05em}.albumPanel p{color:#aec8dd;font-size:13px;line-height:1.6}
+#albumGrid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px;margin:20px 0}
+.albumItem{background:#203b53;border:1px solid #ffffff22;border-radius:16px;padding:10px 5px;text-align:center;opacity:.43}
+.albumItem.unlocked{opacity:1;border-color:#f6ce7955}
+.albumThumb{height:90px;max-width:90px;margin:0 auto 7px;border-radius:50%;border:3px solid #ffd7ac;background-image:url('assets/nyc-family-sprite.jpg');background-size:400% 200%;background-repeat:no-repeat}
+.albumItem strong{display:block;font-size:10px;line-height:1.3}
+#closeAlbum{width:100%}
+@media(max-width:700px){#collection{display:none}#albumGrid{gap:7px}.albumPanel{padding:18px}.albumThumb{height:60px;width:60px}.albumItem{padding:7px 3px}}
+@media(max-width:700px){#top{padding:13px 12px}.pill{padding:7px 9px;min-width:65px}.pill strong{font-size:16px}.wordmark{font-size:18px}.eyebrow{font-size:8px}#photos{display:none}.how{display:none}#bottom{bottom:calc(12px + env(safe-area-inset-bottom,0px))}.ctrl{font-size:12px;padding:10px 13px}}
+</style></head><body><canvas id="scene" aria-label="NYC Memories merge-spil"></canvas><div id="app">
+<header id="top"><div><div class="wordmark">NYC <span>MEMORIES</span></div><div class="eyebrow">FAMILY MERGE · NEW YORK 2026</div><div id="nycStage" style="color:#ffe2b9;font-size:10px;font-weight:900;letter-spacing:.13em;margin-top:9px">MORGEN · BROOKLYN</div></div><div class="scorebar"><div class="pill"><small>POINT</small><strong id="score">0</strong></div><div class="pill"><small>REKORD</small><strong id="best">0</strong></div></div></header>
+<div id="notice">FANTASTISK MERGE!</div><div id="collection"><div class="label">SAMLING</div><div class="memory" id="topMemory">Pancakes</div><div class="track"><i id="collectionTrack"></i></div><div class="subtext" id="collectionCount">1 af 8 minder opdaget</div></div><div id="photos"><b>Jeres New York-eventyr</b>Brikkerne bygger på motiver fra jeres feriebilleder: metro, skyline, morgenmad, familie og byens ikoner.</div>
+<footer id="bottom"><button id="restart" class="ctrl">↻ Nyt spil</button><p class="how">Flyt musen eller fingeren · Klik/tap for at slippe · Match to ens motiver</p><button id="openAlbum" class="ctrl" aria-label="Åbn fotoalbum">▦ Album</button><button id="pause" class="ctrl" aria-label="Pause eller fortsæt spil">Ⅱ Pause</button><label class="ctrl" style="display:flex;align-items:center;gap:6px" for="volume">Vol <input id="volume" type="range" min="0" max="100" value="75" aria-label="Musiklydstyrke"></label><button id="music" class="ctrl" aria-label="Slå baggrundsmusik til eller fra" aria-pressed="true" title="Baggrundsmusik">♫ Musik</button><button id="mute" class="ctrl" aria-label="Slå lydeffekter til eller fra" aria-pressed="true" title="Lydeffekter">♪ FX</button></footer><div id="soundStatus" role="status" aria-live="polite"></div>
+<div id="album" class="hidden"><div class="albumPanel"><h2>Jeres New York-album</h2><p>Saml to ens ferieminder for at låse næste billede op. Hvert motiv kommer fra jeres egne feriefotos.</p><div id="albumGrid"></div><button class="primary" id="closeAlbum">TILBAGE TIL SPILLET</button></div></div>
+<div id="panel" class="panelBG"><div class="panel"><div class="kicker">THE BIG APPLE COLLECTION</div><h1 id="headline">NYC<br><em>MEMORIES.</em></h1><p id="description">En familieferie bliver til et merge-eventyr. Slip New York-motiver ned i glasset, kombiner to ens, og arbejd dig hele vejen op til den ultimative familiefoto-brik.</p><button class="primary" id="start">SPIL NU →</button><div class="small">En hyggelig, original fysikbaseret merge-oplevelse. Virker på mobil og computer.</div></div></div>
 </div>
-<script type="module" src="./game3d.js"></script>
 <script>
-window.addEventListener('load',()=>setTimeout(()=>{
- const loader=document.getElementById('loading');
- if(loader&&!loader.classList.contains('hidden')){
-  loader.innerHTML='<div style="max-width:450px;padding:28px;text-align:center;line-height:1.7">3D-spillet kunne ikke indlæses. Browseren skal understøtte WebGL og kunne hente Three.js.<p><a href="legacy-2d.html" style="display:inline-block;color:#152d42;background:#ffd090;padding:12px 20px;border-radius:13px;font-weight:900;text-decoration:none">Spil den tidligere 2D-version</a></p></div>';
+(()=>{'use strict';
+const c=document.getElementById('scene'),ctx=c.getContext('2d',{alpha:false}),$=s=>document.querySelector(s);
+const levels=[
+{name:'Pancake breakfast',short:'PANCAKES',emoji:'🥞',color:'#f1ad6f',photo:7},
+{name:'NYC subway',short:'SUBWAY',emoji:'🚇',color:'#72badb',photo:3},
+{name:'Times Square',short:'TIMES SQUARE',emoji:'🌆',color:'#fc83bd',photo:5},
+{name:'Harbor cruise',short:'HARBOR',emoji:'⛴️',color:'#74c8d3',photo:1},
+{name:'9/11 Memorial',short:'MEMORIAL',emoji:'🕊️',color:'#89b7c5',photo:2},
+{name:'Autumn in NYC',short:'AUTUMN',emoji:'🍂',color:'#f4a75b',photo:4},
+{name:'Empire State',short:'EMPIRE STATE',emoji:'🏙️',color:'#b59dee',photo:0},
+{name:'Family in NYC',short:'FAMILY',emoji:'👨‍👩‍👧',color:'#ff91a7',photo:6}
+];
+const radii=[21,27,34,43,53,65,79,94],maxLevel=levels.length-1;
+let albumOpen=false,wasPaused=false,highest=0,paused=false,cw=0,ch=0,dpr=1,arena={x:0,y:0,w:0,h:0},bodies=[],particles=[],score=0,best=0,current=0,next=1,aim=0,dragging=false,ready=false,running=false,over=false,dropCooldown=0,danger=0,elapsed=0,pulse=0,combo=0,comboTimer=0,noticeTimer=0,last=performance.now(),id=0,audio=null,muted=false,musicEnabled=true,musicVolume=.75,musicBus=null,nextBeatTime=0,beatIndex=0,audioError=false;
+const clamp=(n,a,b)=>Math.max(a,Math.min(b,n)),rand=(a,b)=>a+Math.random()*(b-a);
+try{musicEnabled=localStorage.getItem('nyc-merge-music-v1')!=='off';musicVolume=Math.max(0,Math.min(1,Number(localStorage.getItem('nyc-merge-volume-v1')??75)/100));best=Number(localStorage.getItem('nyc-merge-best-v1'))||0;highest=Math.max(0,Math.min(7,Number(localStorage.getItem('nyc-merge-highest-v1'))||0))}catch{}$('#best').textContent=best;
+function updateCollection(){const i=Math.min(highest,levels.length-1);$('#topMemory').textContent=levels[i].name;$('#collectionCount').textContent=(i+1)+' af '+levels.length+' minder opdaget';$('#collectionTrack').style.width=((i+1)/levels.length*100)+'%';$('#albumGrid').innerHTML=levels.map((level,j)=>{const x=(level.photo%4)/3*100,y=Math.floor(level.photo/4)*100;return '<div class="albumItem '+(j<=highest?'unlocked':'')+'"><div class="albumThumb" style="background-position:'+x+'% '+y+'%"></div><strong>'+(j<=highest?level.name:'Låst minde')+'</strong></div>'}).join('')}
+updateCollection();$('#volume').value=String(Math.round(musicVolume*100));$('#music').textContent=musicEnabled?'♫ Musik':'♫ Fra';$('#music').setAttribute('aria-pressed',String(musicEnabled));
+const sprite=new Image();sprite.src='assets/nyc-family-sprite.jpg';let spriteOK=false;sprite.onload=()=>spriteOK=true;sprite.onerror=()=>spriteOK=false;
+ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';
+function size(){const old={...arena};dpr=Math.min(devicePixelRatio||1,2);cw=innerWidth;ch=innerHeight;c.width=Math.round(cw*dpr);c.height=Math.round(ch*dpr);ctx.imageSmoothingEnabled=true;ctx.imageSmoothingQuality='high';const margin=cw<600?14:26;const top=ch<680?130:155;const bottom=ch<680?70:95;const aw=Math.min(cw-margin*2,cw>900?480:540);const ah=Math.max(220,ch-top-bottom);arena={x:(cw-aw)/2,y:top,w:aw,h:ah};if(old.w>0&&bodies.length){for(const b of bodies){b.x=clamp(arena.x+(b.x-old.x)/old.w*arena.w,arena.x+b.r,arena.x+arena.w-b.r);b.y=clamp(arena.y+(b.y-old.y)/old.h*arena.h,arena.y-b.r,arena.y+arena.h-b.r)}}aim=clamp(old.w>0?arena.x+(aim-old.x)/old.w*arena.w:cw/2,arena.x+26,arena.x+aw-26)}
+addEventListener('resize',size);size();
+function choose(){return Math.floor(Math.random()*Math.min(4,Math.max(2,3+Math.floor(score/2500))))}
+function start(){bodies=[];particles=[];score=0;current=choose();next=choose();combo=0;danger=0;dropCooldown=0;elapsed=0;running=true;paused=false;albumOpen=false;$('#album').classList.add('hidden');over=false;ready=true;aim=arena.x+arena.w/2;$('#score').textContent='0';$('#panel').classList.add('hidden');$('#pause').textContent='Ⅱ Pause';beginMusic()}
+function lose(){over=true;running=false;stopMusic();ready=false;$('#headline').innerHTML='GAME<br><em>OVER.</em>';$('#description').textContent='Du samlede '+score.toLocaleString('da-DK')+' point. Prøv igen og byg din ultimative New York-samling.';$('#start').textContent='PRØV IGEN →';$('#panel').classList.remove('hidden')}
+$('#openAlbum').addEventListener('click',()=>{wasPaused=paused;albumOpen=true;paused=true;syncMusic();updateCollection();$('#album').classList.remove('hidden')});
+$('#closeAlbum').addEventListener('click',()=>{albumOpen=false;$('#album').classList.add('hidden');paused=wasPaused;$('#pause').textContent=paused?'▶ Fortsæt':'Ⅱ Pause';syncMusic()});
+$('#start').addEventListener('click',start);$('#restart').addEventListener('click',start);$('#pause').addEventListener('click',()=>{if(!running||albumOpen)return;paused=!paused;$('#pause').textContent=paused?'▶ Fortsæt':'Ⅱ Pause';syncMusic()});
+$('#mute').addEventListener('click',()=>{muted=!muted;$('#mute').textContent=muted?'♪̸ FX':'♪ FX';$('#mute').setAttribute('aria-pressed',String(!muted))});
+$('#volume').addEventListener('input',e=>{musicVolume=Number(e.target.value)/100;try{localStorage.setItem('nyc-merge-volume-v1',String(e.target.value))}catch{}syncMusic()});
+$('#music').addEventListener('click',()=>{musicEnabled=!musicEnabled;try{localStorage.setItem('nyc-merge-music-v1',musicEnabled?'on':'off')}catch{}$('#music').textContent=musicEnabled?'♫ Musik':'♫ Fra';$('#music').setAttribute('aria-pressed',String(musicEnabled));if(musicEnabled)beginMusic();else stopMusic()});
+// An original 82 BPM lo-fi/jazz arrangement, synthesized entirely with Web Audio.
+const BPM=82,BEAT=60/BPM;
+const chords=[
+ [48,55,59,62,64], // Cmaj9
+ [45,52,55,59,64], // Am9
+ [50,57,60,64,67], // Dm9
+ [43,50,53,57,62]  // G9
+];
+const melody=[64,null,67,69,71,null,67,null,64,62,60,null,62,64,67,null];
+function midi(n){return 440*Math.pow(2,(n-69)/12)}
+function ensureAudio(){try{if(!audio){const C=window.AudioContext||window.webkitAudioContext;if(!C)return false;audio=new C();musicBus=audio.createGain();musicBus.gain.value=.00001;musicBus.connect(audio.destination)}if(audio.state==='suspended'){Promise.resolve(audio.resume()).then(()=>{audioError=false;syncMusic()}).catch(()=>{$('#soundStatus').textContent='Tryk Musik for at aktivere lyd i browseren'})}return true}catch{audioError=true;$('#soundStatus').textContent='Browseren kunne ikke starte musikken';return false}}
+function tone(note,when,duration,volume,type='sine',dest=musicBus){if(!audio||!dest)return;const osc=audio.createOscillator(),env=audio.createGain();osc.type=type;osc.frequency.setValueAtTime(midi(note),when);env.gain.setValueAtTime(.0001,when);env.gain.exponentialRampToValueAtTime(Math.max(.00011,volume),when+.025);env.gain.exponentialRampToValueAtTime(.0001,when+duration);osc.connect(env);env.connect(dest);osc.start(when);osc.stop(when+duration+.02)}
+function scheduleBeat(when,n){const chord=chords[Math.floor(n/8)%chords.length];const step=n%8;
+ if(step===0||step===4){for(let j=1;j<5;j++)tone(chord[j]+12,when+(.025*j),BEAT*2.65,.055,'triangle')}
+ if(step%2===0)tone(chord[0]-12,when,BEAT*.75,.11,'sine');
+ if(step===2||step===6){tone(75,when,BEAT*.11,.016,'triangle');tone(82,when+.025,BEAT*.10,.012,'sine')}
+ const note=melody[n%melody.length];if(note!==null)tone(note,when+BEAT*.07,BEAT*.7,.085,'sine')
+}
+function syncMusic(){if(!audio||!musicBus)return;const active=musicEnabled&&running&&!paused&&!albumOpen&&!over&&document.visibilityState!=='hidden';const now=audio.currentTime;musicBus.gain.cancelScheduledValues(now);musicBus.gain.setTargetAtTime(active?musicVolume:.00001,now,active?.1:.06);$('#soundStatus').textContent=audioError?'Musikken kunne ikke afspilles':(!musicEnabled?'Musik slået fra':(musicVolume===0?'Musiklydstyrke er 0%':''));if(active)nextBeatTime=Math.max(nextBeatTime,now+.04);else nextBeatTime=now+.06}
+function stopMusic(){syncMusic()}
+function beginMusic(){if(!musicEnabled)return;if(!ensureAudio())return;nextBeatTime=audio.currentTime+.08;beatIndex=0;syncMusic()}
+function tickMusic(){if(!audio||!musicBus||!musicEnabled||!running||paused||albumOpen||over||document.visibilityState==='hidden')return;const now=audio.currentTime;if(nextBeatTime<now)nextBeatTime=now+.04;let count=0;while(nextBeatTime<now+.15&&count++<4){scheduleBeat(nextBeatTime,beatIndex++);nextBeatTime+=BEAT}}
+addEventListener('visibilitychange',syncMusic);
+function beep(freq=440,duration=.1){if(muted||!ensureAudio())return;try{const osc=audio.createOscillator(),gain=audio.createGain();osc.type='sine';osc.frequency.setValueAtTime(freq,audio.currentTime);osc.frequency.exponentialRampToValueAtTime(freq*1.3,audio.currentTime+duration);gain.gain.setValueAtTime(.06,audio.currentTime);gain.gain.exponentialRampToValueAtTime(.001,audio.currentTime+duration);osc.connect(gain).connect(audio.destination);osc.start();osc.stop(audio.currentTime+duration)}catch{}}
+function pointer(e){const rect=c.getBoundingClientRect();aim=clamp(e.clientX-rect.left,arena.x+radii[current]+3,arena.x+arena.w-radii[current]-3)}
+c.addEventListener('pointermove',e=>{pointer(e)});c.addEventListener('pointerdown',e=>{if(!running)return;pointer(e);dragging=true;c.setPointerCapture(e.pointerId)});c.addEventListener('pointerup',e=>{if(!running)return;if(dragging){pointer(e);drop()}dragging=false});c.addEventListener('pointercancel',()=>dragging=false);
+addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space'].includes(e.code))e.preventDefault();if(e.repeat)return;if(e.code==='ArrowLeft'||e.code==='KeyA')aim=Math.max(arena.x+radii[current]+3,aim-22);if(e.code==='ArrowRight'||e.code==='KeyD')aim=Math.min(arena.x+arena.w-radii[current]-3,aim+22);if(['Space','ArrowDown','Enter'].includes(e.code)&&running)drop();if(e.code==='KeyR')start();if(e.code==='Escape'&&albumOpen)$('#closeAlbum').click();if(e.code==='KeyP'&&running&&!albumOpen){paused=!paused;$('#pause').textContent=paused?'▶ Fortsæt':'Ⅱ Pause';syncMusic()}});
+function drop(){if(!running||paused||albumOpen||dropCooldown>0||!ready)return;const r=radii[current];bodies.push({id:++id,x:aim,y:arena.y-r-8,vx:0,vy:30,r,level:current,age:0,settled:false,scale:.85,rot:rand(-.08,.08),merging:false});current=next;next=choose();ready=true;dropCooldown=.42;if(navigator.vibrate)navigator.vibrate(10);beep(250,.055)}
+function fx(x,y,color,n=20){for(let i=0;i<n;i++){let a=rand(0,Math.PI*2),s=rand(45,220);particles.push({x,y,vx:Math.cos(a)*s,vy:Math.sin(a)*s-70,life:rand(.4,.95),max:.95,color,r:rand(2,6)})}}
+function merge(a,b){if(a.merging||b.merging||a.level!==b.level)return;let level=a.level+1;if(level>maxLevel)return;a.merging=b.merging=true;const x=(a.x+b.x)/2,y=(a.y+b.y)/2;const value=(level+1)*25*2**level*(1+Math.min(combo,5)*.2);score+=Math.round(value);if(level>highest){highest=level;try{localStorage.setItem('nyc-merge-highest-v1',String(highest))}catch{}updateCollection()}combo++;comboTimer=1.6;$('#score').textContent=score.toLocaleString('da-DK');if(score>best){best=score;$('#best').textContent=best.toLocaleString('da-DK');try{localStorage.setItem('nyc-merge-best-v1',String(best))}catch{}}fx(x,y,levels[level].color,23);if(navigator.vibrate)navigator.vibrate([14,18,24]);pulse=.45;beep(350+level*90,.17);noticeTimer=1.1;$('#notice').textContent=level===maxLevel?'FAMILIEMINDE LÅST OP!':combo>2?'KOMBO x'+combo+'!':levels[level].name.toUpperCase()+'!';$('#notice').classList.add('show');bodies=bodies.filter(q=>q!==a&&q!==b);bodies.push({id:++id,x,y,vx:(a.vx+b.vx)*.3,vy:-190,r:radii[level],level,age:0,settled:false,scale:.35,rot:rand(-.1,.1),merging:false})}
+function physics(dt){if(!running||paused)return;elapsed+=dt;dropCooldown=Math.max(0,dropCooldown-dt);comboTimer=Math.max(0,comboTimer-dt);if(!comboTimer)combo=0;noticeTimer=Math.max(0,noticeTimer-dt);if(noticeTimer===0)$('#notice').classList.remove('show');pulse=Math.max(0,pulse-dt);
+const steps=4,h=dt/steps,gravity=960;
+for(let s=0;s<steps;s++){for(const b of bodies){b.age+=h;b.scale+=(1-b.scale)*Math.min(1,h*13);b.vy+=gravity*h;b.vx*=.998;b.x+=b.vx*h;b.y+=b.vy*h;const floor=arena.y+arena.h;if(b.x-b.r<arena.x){b.x=arena.x+b.r;b.vx=Math.abs(b.vx)*.16}if(b.x+b.r>arena.x+arena.w){b.x=arena.x+arena.w-b.r;b.vx=-Math.abs(b.vx)*.16}if(b.y+b.r>floor){b.y=floor-b.r;b.vy=-Math.abs(b.vy)*.08;if(Math.abs(b.vy)<25)b.vy=0;b.vx*=.91}}
+for(let iteration=0;iteration<2;iteration++){let merged=false;outer:for(let i=0;i<bodies.length;i++)for(let j=i+1;j<bodies.length;j++){const a=bodies[i],b=bodies[j];let dx=b.x-a.x,dy=b.y-a.y,dist=Math.hypot(dx,dy)||.001,minDist=a.r+b.r;if(dist>=minDist)continue;if(a.level===b.level&&a.age>.075&&b.age>.075&&a.level<maxLevel){merge(a,b);merged=true;break outer}const nx=dx/dist,ny=dy/dist,penetration=minDist-dist;const invA=1/(a.r*a.r),invB=1/(b.r*b.r),total=invA+invB;a.x-=nx*penetration*invA/total*.55;a.y-=ny*penetration*invA/total*.55;b.x+=nx*penetration*invB/total*.55;b.y+=ny*penetration*invB/total*.55;const relative=(b.vx-a.vx)*nx+(b.vy-a.vy)*ny;if(relative<0){const impulse=-(1+.08)*relative/total;a.vx-=impulse*invA*nx;a.vy-=impulse*invA*ny;b.vx+=impulse*invB*nx;b.vy+=impulse*invB*ny}}
+if(merged)break;for(const b of bodies){b.x=clamp(b.x,arena.x+b.r,arena.x+arena.w-b.r);if(b.y+b.r>arena.y+arena.h){b.y=arena.y+arena.h-b.r;b.vy=Math.min(0,b.vy)*.06}}}}
+let threatened=bodies.some(b=>b.age>2&&b.y-b.r<arena.y+14&&Math.abs(b.vy)<80);danger=clamp(danger+(threatened?dt:-dt*.65),0,2.7);if(danger>=2.7)lose();
+for(let i=particles.length-1;i>=0;i--){let p=particles[i];p.life-=dt;p.x+=p.vx*dt;p.y+=p.vy*dt;p.vy+=350*dt;if(p.life<=0)particles.splice(i,1)}
+}
+function roundRect(x,y,w,h,r,fill){ctx.fillStyle=fill;ctx.beginPath();ctx.roundRect(x,y,w,h,r);ctx.fill()}
+
+const NYC_SCENES=[
+ {label:'MORGEN · BROOKLYN',top:'#7faed7',middle:'#d5dfda',bottom:'#ffcb9d',far:'#7995ab',mid:'#506f89',near:'#2d4a68',windows:'#ecf6ff',lights:.09,stars:0},
+ {label:'DAG · MANHATTAN',top:'#468fc9',middle:'#9fcce6',bottom:'#e9d8ad',far:'#688ba8',mid:'#456786',near:'#284762',windows:'#d9f2ff',lights:.19,stars:0},
+ {label:'SOLNEDGANG · HUDSON',top:'#493e80',middle:'#c46a8a',bottom:'#ffc184',far:'#826a8d',mid:'#584965',near:'#322a4b',windows:'#ffd9aa',lights:.55,stars:.12},
+ {label:'NAT · TIMES SQUARE',top:'#08152d',middle:'#1a2e52',bottom:'#49416a',far:'#344664',mid:'#21304c',near:'#131f39',windows:'#ffe19a',lights:.97,stars:1}
+];
+const NYC_THRESHOLDS=[0,800,2200,5000];
+let bgScene=0,bgBlend=0,bgShown=-1;
+function nycMix(a,b,t){return a+(b-a)*t}
+function nycRGB(hex){const n=parseInt(hex.slice(1),16);return [(n>>16)&255,(n>>8)&255,n&255]}
+function nycColor(a,b,t){const x=nycRGB(a),y=nycRGB(b);return 'rgb('+x.map((v,i)=>Math.round(nycMix(v,y[i],t))).join(',')+')'}
+function nycPalette(){
+ const desired=score<800?0:score<2200?1:score<5000?2:3;
+ // Animate toward the new stage, rather than abruptly replacing the entire scene.
+ bgScene+=(desired-bgScene)*Math.min(.07,Math.max(.008,1/80));
+ if(Math.abs(desired-bgScene)<.004)bgScene=desired;
+ const low=Math.floor(bgScene),high=Math.min(3,low+1),t=bgScene-low;
+ const p=NYC_SCENES[low],q=NYC_SCENES[high],r={};
+ for(const key of ['top','middle','bottom','far','mid','near','windows'])r[key]=nycColor(p[key],q[key],t);
+ for(const key of ['lights','stars'])r[key]=nycMix(p[key],q[key],t);
+ if(desired!==bgShown){bgShown=desired;const label=document.getElementById('nycStage');if(label)label.textContent=NYC_SCENES[desired].label}
+ return r;
+}
+function nycBuilding(x,base,w,h,color,windowColor,lit,seed){
+ ctx.fillStyle=color;ctx.fillRect(x,base-h,w,h);
+ ctx.fillStyle=windowColor;
+ for(let row=0;row<Math.floor((h-12)/15);row++)for(let col=0;col<Math.floor((w-8)/11);col++){
+ const n=Math.sin((seed+col*19+row*23)*73.89)*43758.5453;
+ if(n-Math.floor(n)<.35+lit*.36)continue;
+ ctx.globalAlpha=.17+lit*.74;
+ ctx.fillRect(x+7+col*11,base-h+10+row*15,4,6)
  }
-},10000));
-</script>
-</body></html>
+ ctx.globalAlpha=1
+}
+function nycEmpire(x,base,h,color,lit,windowColor){
+ const w=h*.18;
+ nycBuilding(x-w/2,base,w,h,color,windowColor,lit,91);
+ ctx.fillStyle=color;
+ ctx.fillRect(x-w*.33,base-h-h*.14,w*.66,h*.14);
+ ctx.fillRect(x-w*.13,base-h-h*.24,w*.26,h*.10);
+ ctx.fillStyle=windowColor;
+ ctx.globalAlpha=.42+lit*.5;
+ ctx.fillRect(x-2,base-h-h*.42,4,h*.2);
+ ctx.globalAlpha=1
+}
+function nycBridge(y,color){
+ ctx.strokeStyle=color;ctx.lineWidth=5;ctx.beginPath();ctx.moveTo(0,y);ctx.lineTo(cw,y);ctx.stroke();
+ const left=cw*.16,right=cw*.37;
+ ctx.fillStyle=color;ctx.fillRect(left,y-66,17,66);ctx.fillRect(right,y-66,17,66);
+ ctx.lineWidth=1.6;
+ for(let i=0;i<=20;i++){let x=left+(right-left)*i/20;let sag=12+24*Math.sin(Math.PI*i/20);ctx.beginPath();ctx.moveTo(x,y);ctx.lineTo(x,y-66+sag);ctx.stroke()}
+ ctx.beginPath();ctx.moveTo(0,y-14);ctx.quadraticCurveTo(left,y+18,left+8,y-55);ctx.quadraticCurveTo((left+right)/2,y-2,right+8,y-55);ctx.quadraticCurveTo(cw*.6,y+18,cw,y-20);ctx.stroke()
+}
+function nycStatue(x,y,color){
+ ctx.fillStyle=color;ctx.fillRect(x-15,y-10,30,10);
+ ctx.beginPath();ctx.moveTo(x-9,y-10);ctx.lineTo(x-6,y-56);ctx.lineTo(x+6,y-56);ctx.lineTo(x+10,y-10);ctx.fill();
+ ctx.beginPath();ctx.arc(x,y-63,9,0,Math.PI*2);ctx.fill();
+ ctx.save();ctx.translate(x+6,y-58);ctx.rotate(-.22);ctx.fillRect(0,-34,5,37);ctx.restore();
+ ctx.beginPath();ctx.moveTo(x+6,y-95);ctx.lineTo(x+13,y-83);ctx.lineTo(x,y-83);ctx.fill()
+}
+function backgroundArt(){
+ const p=nycPalette(),gr=ctx.createLinearGradient(0,0,0,ch);
+ gr.addColorStop(0,p.top);gr.addColorStop(.58,p.middle);gr.addColorStop(1,p.bottom);
+ ctx.fillStyle=gr;ctx.fillRect(0,0,cw,ch);
+ const sunX=cw*.78,sunY=ch*.24;
+ const halo=ctx.createRadialGradient(sunX,sunY,3,sunX,sunY,ch*.46);
+ halo.addColorStop(0,'rgba(255,218,165,.57)');halo.addColorStop(1,'rgba(255,218,165,0)');
+ ctx.fillStyle=halo;ctx.fillRect(0,0,cw,ch);
+ ctx.fillStyle=nycColor('#fff0c6','#d5e8fb',p.stars);
+ ctx.globalAlpha=1-p.stars*.45;ctx.beginPath();ctx.arc(sunX,sunY,p.stars>.5?23:38,0,Math.PI*2);ctx.fill();ctx.globalAlpha=1;
+ if(p.stars){ctx.fillStyle='#fff';for(let i=0;i<90;i++){const x=(i*97+13)%Math.max(1,cw),y=(i*59+17)%Math.max(1,ch*.55);ctx.globalAlpha=p.stars*(.25+.55*Math.pow(Math.sin(elapsed*1.3+i),2));ctx.fillRect(x,y,(i%4===0?2:1),1)}ctx.globalAlpha=1}
+ // The harbor, Brooklyn Bridge, and three layers of Manhattan silhouettes.
+ const river=ctx.createLinearGradient(0,ch*.65,0,ch);
+ river.addColorStop(0,nycColor('#749bb8','#142a52',p.stars));river.addColorStop(1,p.near);
+ ctx.fillStyle=river;ctx.fillRect(0,ch*.66,cw,ch*.34);
+ for(let layer=0;layer<3;layer++){
+ const base=ch*(.70+layer*.115),color=[p.far,p.mid,p.near][layer],count=Math.ceil(cw/(layer===0?53:layer===1?59:68))+2;
+ for(let i=0;i<count;i++){const w=28+((i*37+layer*23)%43),h=(layer===0?70:layer===1?105:130)+((i*53+layer*97)%125);
+ const x=i*(cw/count)-8;nycBuilding(x,base,w,h,color,p.windows,p.lights*(layer===0?.45:layer===1?.7:1),i*7+layer*90)}
+ }
+ nycBridge(ch*.78,p.mid);
+ nycStatue(cw*.09,ch*.70,p.far);
+ nycEmpire(cw*.64,ch*.84,Math.min(ch*.39,270),p.near,p.lights,p.windows);
+ // Distant rooftop water tower, animated yellow taxis, and night reflections.
+ ctx.fillStyle=p.near;ctx.fillRect(cw*.85,ch*.73,32,22);ctx.fillRect(cw*.861,ch*.705,4,23);ctx.fillRect(cw*.884,ch*.705,4,23);
+ ctx.fillStyle=nycColor('#3a4d60','#0c1729',p.stars);ctx.fillRect(0,ch-55,cw,55);
+ for(let i=0;i<3;i++){let x=((elapsed*(25+i*11)+cw*.32*i)%(cw+110))-80,y=ch-30+(i%2)*12;
+ ctx.fillStyle='#efbe4a';ctx.fillRect(x,y,34,12);ctx.fillRect(x+8,y-7,18,9);ctx.fillStyle='#1a2d43';ctx.fillRect(x+11,y-5,12,5);ctx.fillRect(x+5,y+10,6,6);ctx.fillRect(x+25,y+10,6,6)}
+ if(p.lights>.35){ctx.fillStyle='rgba(255,184,108,'+((p.lights-.35)*.2)+')';for(let i=0;i<22;i++)ctx.fillRect((i*83)%cw,ch-50+(i%4)*11,9,2)}
+}
+function drawTile(x,y,r,level,alpha=1,scale=1){const l=levels[level];ctx.save();ctx.translate(x,y);ctx.scale(scale,scale);ctx.globalAlpha=alpha;ctx.shadowColor=l.color;ctx.shadowBlur=19;const grad=ctx.createRadialGradient(-r*.32,-r*.45,r*.08,0,0,r);grad.addColorStop(0,'#ffffff');grad.addColorStop(.12,l.color);grad.addColorStop(1,'#19263e');ctx.fillStyle=grad;ctx.beginPath();ctx.arc(0,0,r,0,Math.PI*2);ctx.fill();ctx.shadowBlur=0;ctx.save();ctx.beginPath();ctx.arc(0,0,r-4,0,Math.PI*2);ctx.clip();if(spriteOK){const sx=(l.photo%4)*64,sy=Math.floor(l.photo/4)*64;ctx.drawImage(sprite,sx,sy,64,64,-r+3,-r+3,(r-3)*2,(r-3)*2);ctx.fillStyle='#101b3050';ctx.fillRect(-r,-r,r*2,r*2)}else{ctx.font=(r*.9)+'px system-ui';ctx.textAlign='center';ctx.textBaseline='middle';ctx.fillText(l.emoji,0,-r*.13)}const shade=ctx.createLinearGradient(0,-r,0,r);shade.addColorStop(0,'#0000');shade.addColorStop(.53,'#0000');shade.addColorStop(1,'#08172fe8');ctx.fillStyle=shade;ctx.fillRect(-r,-r,r*2,r*2);ctx.restore();ctx.strokeStyle='#ffffffcc';ctx.lineWidth=Math.max(1.5,r*.055);ctx.beginPath();ctx.arc(0,0,r-2,0,7);ctx.stroke();ctx.textAlign='center';ctx.textBaseline='middle';ctx.font='900 '+clamp(r*.24,8,14)+'px system-ui';ctx.shadowColor='#000';ctx.shadowBlur=5;ctx.fillStyle='#fff';ctx.fillText(l.short,0,r*.61,r*1.72);ctx.shadowBlur=0;ctx.fillStyle='#ffffff88';ctx.beginPath();ctx.ellipse(-r*.28,-r*.48,r*.25,r*.11,-.7,0,Math.PI*2);ctx.fill();ctx.restore()}
+function draw(){ctx.setTransform(dpr,0,0,dpr,0,0);backgroundArt();const a=arena;roundRect(a.x-9,a.y-9,a.w+18,a.h+18,26,'#08182c');roundRect(a.x,a.y,a.w,a.h,20,'#0a1729ba');ctx.save();ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.clip();const glow=ctx.createLinearGradient(0,a.y,0,a.y+a.h);glow.addColorStop(0,'#35607e40');glow.addColorStop(1,'#162f5350');ctx.fillStyle=glow;ctx.fillRect(a.x,a.y,a.w,a.h);for(let j=0;j<9;j++){ctx.strokeStyle='#ffffff07';ctx.beginPath();ctx.moveTo(a.x,a.y+j*a.h/8);ctx.lineTo(a.x+a.w,a.y+j*a.h/8);ctx.stroke()}const dangerAlpha=clamp(danger/2.7,0,1);if(dangerAlpha){ctx.fillStyle='rgba(255,77,99,'+(dangerAlpha*.2)+')';ctx.fillRect(a.x,a.y,a.w,25)}for(const b of bodies)drawTile(b.x,b.y,b.r,b.level,1,b.scale);for(const p of particles){ctx.globalAlpha=Math.max(0,p.life/p.max);ctx.fillStyle=p.color;ctx.beginPath();ctx.arc(p.x,p.y,p.r,0,7);ctx.fill()}ctx.globalAlpha=1;ctx.restore();ctx.strokeStyle='#9eeaff77';ctx.lineWidth=2;ctx.beginPath();ctx.roundRect(a.x,a.y,a.w,a.h,20);ctx.stroke();
+if(running){const r=radii[current];ctx.save();ctx.setLineDash([4,7]);ctx.strokeStyle='#fcd3b477';ctx.beginPath();ctx.moveTo(aim,a.y-r-24);ctx.lineTo(aim,a.y+a.h);ctx.stroke();ctx.restore();drawTile(aim,a.y-r-17,r,current,dropCooldown>0?.65:1);const nr=radii[next];const px=cw>730?a.x+a.w+38:a.x+a.w-51,py=a.y-46;ctx.fillStyle='#d3ebff';ctx.font='800 10px system-ui';ctx.textAlign='center';ctx.fillText('NÆSTE',px,py-nr*.5-17);drawTile(px,py+nr*.25,Math.min(24,nr),next)}
+if(paused&&running){ctx.fillStyle='#071527c9';ctx.fillRect(a.x,a.y,a.w,a.h);ctx.textAlign='center';ctx.fillStyle='#f7f4e9';ctx.font='900 34px system-ui';ctx.fillText('PAUSE',a.x+a.w/2,a.y+a.h/2);ctx.font='500 14px system-ui';ctx.fillText('Tryk P eller Fortsæt',a.x+a.w/2,a.y+a.h/2+28)}if(pulse>0){ctx.fillStyle='rgba(255,232,190,'+(pulse*.12)+')';ctx.fillRect(a.x,a.y,a.w,a.h)}
+}
+function frame(t){const dt=Math.min(.033,(t-last)/1000);last=t;physics(dt);tickMusic();draw();requestAnimationFrame(frame)}requestAnimationFrame(frame);
+})();
+</script></body></html>
