@@ -39,7 +39,7 @@ const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);
 const cameraTarget=new THREE.Vector3();function cam(x,y,z,lookX,lookY,lookZ,instant=false){const a=instant?1:.065;camera.position.lerp(new THREE.Vector3(x,y,z),a);cameraTarget.lerp(new THREE.Vector3(lookX,lookY,lookZ),a);camera.lookAt(cameraTarget)}
 const candyColors=['#e9426d','#f2c23d','#63b9eb','#76c76c','#e18443','#bc74d7'];
 const photoTexture=new THREE.TextureLoader();let spriteMaterial=null;const avatars=[];
-try{photoTexture.load('./assets/nyc-family-sprite.jpg',tex=>{tex.colorSpace=THREE.SRGBColorSpace;spriteMaterial=tex;for(const a of avatars)attachPortrait(a.group,a.cell)},undefined,()=>{})}catch{}
+try{photoTexture.load('./assets/nyc-family-sprite.jpg',tex=>{tex.colorSpace=THREE.SRGBColorSpace;spriteMaterial=tex;for(const a of avatars)attachPortrait(a.group,a.cell);if(airportCockpit)decorateAirportFaces()},undefined,()=>{})}catch{}
 function attachPortrait(g,photoCell){if(!spriteMaterial||g.userData.hasPortrait)return;const uv=photoCell%4,vy=Math.floor(photoCell/4);const geo=new THREE.PlaneGeometry(.39,.38);const tex=spriteMaterial.clone();tex.needsUpdate=true;tex.repeat.set(.25,.5);tex.offset.set(uv*.25,(1-vy)*.5-.5);const portrait=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));portrait.position.set(0,1.75,.22);g.add(portrait);g.userData.hasPortrait=true}
 function human(x,z,coat='#fc8e84',scale=1,photoCell=3){const g=new THREE.Group();const leg=mat('#203449',.07,.76);
 function add(mesh,x,y,z){mesh.position.set(x,y,z);mesh.castShadow=true;g.add(mesh);return mesh}
@@ -68,6 +68,21 @@ function suitcase(x,z,color='#ab5f78',scale=1){const group=new THREE.Group(),bod
  * The game logic still runs in the actual airport world.
  */
 let airportCockpit=null;
+function decorateAirportFaces(){
+ if(!spriteMaterial||!airportCockpit)return;
+ const faces=airportCockpit.userData.faceRefs||[];
+ for(const ref of faces){
+  if(ref.hero.userData.hasFace)return;
+  const texture=spriteMaterial.clone();
+  texture.needsUpdate=true;
+  texture.repeat.set(.25,.5);
+  texture.offset.set((ref.photo%4)*.25,(1-Math.floor(ref.photo/4))*.5-.5);
+  const face=new THREE.Mesh(new THREE.PlaneGeometry(.46,.43),new THREE.MeshBasicMaterial({map:texture,transparent:true,depthTest:false,depthWrite:false,side:THREE.DoubleSide}));
+  face.position.set(0,1.85,.28);
+  face.renderOrder=137;
+  ref.hero.add(face);ref.hero.userData.hasFace=true;
+ }
+}
 function buildAirportForeground(){
  if(airportCockpit){camera.remove(airportCockpit);airportCockpit.traverse?.(o=>{if(o.geometry)o.geometry.dispose()});airportCockpit=null}
  const group=new THREE.Group();camera.add(group);if(camera.parent!==scene)scene.add(camera);
@@ -101,7 +116,7 @@ function buildAirportForeground(){
   depthTest:false,depthWrite:false,side:THREE.DoubleSide
  }));placard.position.set(0,2.55,-11);placard.renderOrder=118;group.add(placard);
  // Family figures are deliberately large enough to read on narrow iPhones.
- const folks=[{x:-1.15,coat:'#6cc4d0',pant:'#273d59',s:1},{x:0,coat:'#f1a778',pant:'#334a65',s:1.18},{x:1.18,coat:'#ef93b3',pant:'#334a65',s:.92}];
+ const folks=[{x:-1.15,coat:'#6cc4d0',pant:'#273d59',s:1,photo:1},{x:0,coat:'#f1a778',pant:'#334a65',s:1.18,photo:3},{x:1.18,coat:'#ef93b3',pant:'#334a65',s:.92,photo:6}];
  const heroes=[];
  for(const f of folks){
   const hero=new THREE.Group();hero.position.set(f.x,-1.9,-6.7);
@@ -111,7 +126,7 @@ function buildAirportForeground(){
   const l=add(.2,.72,.23,f.pant,-.18,.34,0),rr=add(.2,.72,.23,f.pant,.18,.34,0);
   add(.17,.65,.2,'#efbd9a',-.42,1.16,0);add(.17,.65,.2,'#efbd9a',.42,1.16,0);
   const hair=new THREE.Mesh(new THREE.SphereGeometry(.3,16,10,0,Math.PI*2,0,Math.PI*.42),new THREE.MeshBasicMaterial({color:'#3d302e',depthTest:false,depthWrite:false}));hair.position.set(0,1.98,0);hair.renderOrder=134;hero.add(hair);
-  hero.scale.setScalar(f.s);group.add(hero);heroes.push({hero,l,rr});
+  hero.scale.setScalar(f.s);group.add(hero);heroes.push({hero,l,rr,photo:f.photo});
  }
  const obstacles=[];
  for(let i=0;i<8;i++){
@@ -120,7 +135,7 @@ function buildAirportForeground(){
   const handle=make(.4,.16,.1,'#263b55',x,-.95,z,122);
   obstacles.push({body,handle,z,worldX:7+i*11,x})
  }
- return {group,heroes,obstacles};
+ group.userData.faceRefs=heroes;decorateAirportFaces();return {group,heroes,obstacles};
 }
 function updateAirportForeground(dt){
  if(!airportCockpit||level!==1||!world.player)return;
