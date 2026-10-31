@@ -33,10 +33,10 @@ assert.ok(events['#start:click'],'Missing start button handler');
 events['#start:click']();
 assert.ok(scheduled,'Animation was not scheduled');
 for(let i=1;i<8;i++){const next=scheduled;next(i*16.67)}
-assert.ok(events['scene:pointerdown']&&events['scene:pointerup'],'Missing pointer handlers');
+assert.ok(events['#scene:pointerdown']&&events['#scene:pointerup'],'Missing pointer handlers');
 for(let n=0;n<4;n++){
- events['scene:pointerdown']({clientX:475,pointerId:1,preventDefault(){}});
- events['scene:pointerup']({clientX:475,pointerId:1,preventDefault(){}});
+ events['#scene:pointerdown']({clientX:475,pointerId:1,preventDefault(){}});
+ events['#scene:pointerup']({clientX:475,pointerId:1,preventDefault(){}});
  for(let i=1;i<=32;i++){const next=scheduled;next((10+n*40+i)*16.67)}
 }
 assert.ok(elements.get('#score').textContent!==undefined,'Score UI missing');
