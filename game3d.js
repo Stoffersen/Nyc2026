@@ -38,7 +38,7 @@ const sun=new THREE.DirectionalLight('#fff0d1',3.2);sun.position.set(-10,18,16);
 // Camera now lives inside the terminal, not behind its opaque external wall.
 const cameraTarget=new THREE.Vector3();function cam(x,y,z,lookX,lookY,lookZ,instant=false){const a=instant?1:.065;camera.position.lerp(new THREE.Vector3(x,y,z),a);cameraTarget.lerp(new THREE.Vector3(lookX,lookY,lookZ),a);camera.lookAt(cameraTarget)}
 const candyColors=['#e9426d','#f2c23d','#63b9eb','#76c76c','#e18443','#bc74d7'];
-const photoTexture=new THREE.TextureLoader();let spriteMaterial=null;const avatars=[];
+const photoTexture=new THREE.TextureLoader();let spriteMaterial=null,airportCockpit=null;const avatars=[];
 try{photoTexture.load('./assets/nyc-family-sprite.jpg',tex=>{tex.colorSpace=THREE.SRGBColorSpace;spriteMaterial=tex;for(const a of avatars)attachPortrait(a.group,a.cell);if(airportCockpit)decorateAirportFaces()},undefined,()=>{})}catch{}
 function attachPortrait(g,photoCell){if(!spriteMaterial||g.userData.hasPortrait)return;const uv=photoCell%4,vy=Math.floor(photoCell/4);const geo=new THREE.PlaneGeometry(.39,.38);const tex=spriteMaterial.clone();tex.needsUpdate=true;tex.repeat.set(.25,.5);tex.offset.set(uv*.25,(1-vy)*.5-.5);const portrait=new THREE.Mesh(geo,new THREE.MeshBasicMaterial({map:tex,transparent:true,side:THREE.DoubleSide}));portrait.position.set(0,1.75,.22);g.add(portrait);g.userData.hasPortrait=true}
 function human(x,z,coat='#fc8e84',scale=1,photoCell=3){const g=new THREE.Group();const leg=mat('#203449',.07,.76);
@@ -67,7 +67,6 @@ function suitcase(x,z,color='#ab5f78',scale=1){const group=new THREE.Group(),bod
  * in the frustum, even when world-space architecture unexpectedly occludes it.
  * The game logic still runs in the actual airport world.
  */
-let airportCockpit=null;
 function decorateAirportFaces(){
  if(!spriteMaterial||!airportCockpit)return;
  const faces=airportCockpit.userData.faceRefs||[];
