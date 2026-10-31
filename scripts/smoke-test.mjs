@@ -16,4 +16,8 @@ const plain=source.replace(/^import \* as THREE from '[^']+';\s*/m,'');
 new vm.Script(plain,{filename:'game-module-without-import.js'});
 for(const token of ['WebGLRenderer','PerspectiveCamera','requestAnimationFrame','pointerdown','keydown','platforms','gems','drones','camera','shadowMap','reset()'])
   assert.ok(source.includes(token),'Missing 3D gameplay feature: '+token);
+const direct=fs.readFileSync(new URL('../3d.html',import.meta.url),'utf8');
+assert.match(direct,/three@0\\.170\\.0/,'Dedicated 3D entry point is missing Three.js');
+assert.match(direct,/WebGLRenderer/,'Dedicated 3D entry point is not WebGL');
+console.log('PASS: dedicated 3d.html is available.');
 console.log('PASS: 3D HTML game structure, script syntax, platform physics and responsive controls.');
