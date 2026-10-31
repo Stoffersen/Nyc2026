@@ -17,7 +17,7 @@ The game uses a **small, compressed collage** derived from the family vacation p
 
 ## Music and sound
 
-The game includes an **original, procedurally synthesized 82 BPM lo-fi jazz soundtrack**. Soft extended chords, bass, high percussion and a short melody are generated in the browser with Web Audio; no commercial music files or external streaming services are used. Music begins only after the player starts a game and fades out during pauses, while the album is open, when the tab is hidden, and on game over. Use **♫ Musik** to toggle the soundtrack and **♪ FX** to control gameplay sound effects independently. The music setting is stored locally.
+The game includes an **original, procedurally synthesized 82 BPM lo-fi jazz soundtrack**. Soft extended chords, bass, high percussion and a short melody are generated in the browser with Web Audio; no commercial music files or external streaming services are used. Music begins only after the player starts a game and fades out during pauses, while the album is open, when the tab is hidden, and on game over. Use **♫ Musik** to toggle the soundtrack, the **Vol** slider to adjust music volume, and **♪ FX** to control gameplay sound effects independently. Music and volume preferences are stored locally. If music is silent, press Start and turn up the Vol slider and the device's media volume.
 
 ## Features
 8 merge levels, real-time circular collisions, merge chains, particles, orientation-aware board resizing, next-piece preview, best score in local storage, persistent unlocked photo collection, album view, short synthesized audio, haptic merge feedback where supported, pause/resume, mobile and keyboard support.
