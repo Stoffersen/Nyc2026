@@ -21,7 +21,7 @@ const events={};const elements=new Map();let scheduled=null;const fakeGradient={
 const ctx=new Proxy({createLinearGradient:()=>fakeGradient,createRadialGradient:()=>fakeGradient,measureText:()=>({width:50})},{get(t,k){if(k in t)return t[k];return ()=>{}},set(t,k,v){t[k]=v;return true}});
 const makeElement=(name)=>({id:name,textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){}},addEventListener(type,cb){events[name+':'+type]=cb},getContext:()=>ctx,getBoundingClientRect:()=>({left:0,top:0}),setPointerCapture(){}});
 const canvas=makeElement('scene');elements.set('#scene',canvas);
-const document={querySelector(sel){if(!elements.has(sel))elements.set(sel,makeElement(sel));return elements.get(sel)}};
+const document={querySelector(sel){if(!elements.has(sel))elements.set(sel,makeElement(sel));return elements.get(sel)},getElementById(id){return this.querySelector('#'+id)}};
 class ImageStub{set src(x){this._src=x}get src(){return this._src}}
 const storage=new Map();
 const sandbox={document,Image:ImageStub,innerWidth:950,innerHeight:820,devicePixelRatio:1,performance:{now:()=>0},Math,console,
