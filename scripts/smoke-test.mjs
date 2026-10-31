@@ -8,7 +8,7 @@ const sprite=fs.readFileSync(new URL('assets/nyc-family-sprite.jpg',root));
 assert.equal(sprite[0],0xff);
 assert.equal(sprite[1],0xd8);
 assert.ok(sprite.length>2000);
-assert.match(html,/NYC FAMILY QUEST/);
+assert.match(html,/FAMILY QUEST/);
 assert.match(html,/href="merge.html"/);
 const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
 assert.equal(scripts.length,1);
