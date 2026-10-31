@@ -91,7 +91,7 @@ for(let i=0;i<4;i++)makePipe([-9,-3,3,9][i]);
 sign('THE CANDY LAB',0,9.3,-9.2,13,2,true,'#ffffff','#a42c79');
 for(let i=0;i<7;i++){areaLight(-12+i*4,12,-3,'#fff2f6',9,2.6,.8)}
 const player=human(0,3.5,'#f0afcd',1.15,4);const basket=box(2.2,.4,1.2,'#ffce83',0,1,3.5);basket.material=mat('#efc06e',.22,.45);
-world={x:0,player,basket,time:66,caught:0,goal:25,health:4,items:[],spawn:.45};
+world={x:0,player,basket,time:66,caught:0,goal:25,health:4,items:[],spawn:.45,magnetTime:0};
 cam(0,10,17,0,4,-3,true)
 }
 function setup3(){
@@ -137,7 +137,7 @@ function addScore(n){score+=n;$('#score').textContent=score.toLocaleString('da-D
 function updateHUD(){const L=levels[level-1];$('#lv').textContent=level+' / 4';$('#stageName').textContent=L.title;$('#chapterTag').textContent=L.tag;$('#stageDesc').textContent=L.desc;$('#score').textContent=score.toLocaleString('da-DK');$('#progressFill').style.width='0%';$('#puzzle').classList.add('hidden');$('#cookUI').classList.add('hidden');$('#left').style.display=level===3||level===4?'none':'';$('#right').style.display=level===3||level===4?'none':'';$('#action').textContent=['HOP','FANG','KØR ↑','LAV MAD'][level-1]}
 function showPanel(tag,title,desc,button,cb){mode='panel';onAction=cb;$('#modalTag').textContent=tag;$('#modalTitle').innerHTML=title;$('#modalDesc').textContent=desc;$('#primary').textContent=button;$('#chapterList').innerHTML=['✈️','🍬','🏙️','🍕'].map((emoji,i)=>'<div class="chapter '+(i+1<level?'passed':i+1===level?'current':'')+'"><b>'+emoji+'</b>'+['LUFTHAVN','DITTE','ELEVATOR','FOOD QUEST'][i]+'</div>').join('');$('#panel').classList.remove('hidden');}
 function openGame(){level=1;score=0;elapsed=0;setup1();updateHUD();showPanel('EN FAMILIEREJSE TIL NEW YORK','NYC FAMILY<br>QUEST 3D','Fire forskellige 3D-spil med familien. Nå flyet, fang M&M’S med Ditte, løs Empire State-elevatoren, og gå gennem Manhattan med mad-merges.','START LEVEL 1 →',()=>startLevel(1))}
-function startLevel(n){level=n;elapsed=0;mode='play';if(n===1)setup1();else if(n===2)setup2();else if(n===3)setup3();else setup4();updateHUD();$('#panel').classList.add('hidden');$('#puzzle').classList.toggle('hidden',n!==3);$('#cookUI').classList.toggle('hidden',n!==4);if(n===3)renderPuzzle();if(n===4)updateFoodUI();showToast(['✈ NÅ GATE 26!','🍬 HJÆLP DITTE!','🏙 TÆND DE RIGTIGE KREDSLØB!','🍽️ LAV JERES NYC-RETTER!'][n-1])}
+function startLevel(n){level=n;elapsed=0;mode='play';keys.left=false;keys.right=false;if(n===1)setup1();else if(n===2)setup2();else if(n===3)setup3();else setup4();updateHUD();$('#panel').classList.add('hidden');$('#puzzle').classList.toggle('hidden',n!==3);$('#cookUI').classList.toggle('hidden',n!==4);if(n===3)renderPuzzle();if(n===4)updateFoodUI();showToast(['✈ NÅ GATE 26!','🍬 HJÆLP DITTE!','🏙 TÆND DE RIGTIGE KREDSLØB!','🍽️ LAV JERES NYC-RETTER!'][n-1])}
 function win(){beep(700,.2);if(level===4){showPanel('MISSION COMPLETE','NEW YORK<br>CHAMPIONS','Hele familien har gennemført alle fire 3D-levels! I fik '+score.toLocaleString('da-DK')+' point.','SPIL IGEN →',openGame);return}const next=level+1;showPanel('LEVEL '+level+' GENNEMFØRT','GODT GÅET!','Familien er klar til næste kapitel: '+levels[next-1].title+'.','VIDERE TIL LEVEL '+next+' →',()=>startLevel(next))}
 function lose(reason){beep(180,.2);showPanel('PRØV IGEN','VI NÅR DET!',''+reason+' I kan prøve level '+level+' igen.','PRØV IGEN →',()=>startLevel(level))}
 function beep(freq,duration=.08){if(muted)return;try{const A=window.AudioContext||window.webkitAudioContext;if(!A)return;world.audio??=new A();if(world.audio.state==='suspended')world.audio.resume();const os=world.audio.createOscillator(),g=world.audio.createGain(),now=world.audio.currentTime;os.frequency.setValueAtTime(freq,now);os.type='sine';g.gain.setValueAtTime(.065,now);g.gain.exponentialRampToValueAtTime(.001,now+duration);os.connect(g).connect(world.audio.destination);os.start();os.stop(now+duration)}catch{}}
@@ -159,17 +159,18 @@ if(g.x>=g.length-1){addScore(Math.ceil(g.time)*12+g.health*100);win()}
 }
 function jump(){if(level===1&&mode==='play'&&world.y<=.01){world.velocityY=9.5;beep(340)}}
 function physics2(dt){
-const g=world;g.time-=dt;g.spawn-=dt;
+const g=world;g.time-=dt;g.spawn-=dt;g.magnetTime=Math.max(0,g.magnetTime-dt);
 if(keys.left)g.x=Math.max(-11,g.x-dt*11);if(keys.right)g.x=Math.min(11,g.x+dt*11);
 g.player.position.x+=(g.x-g.player.position.x)*Math.min(1,dt*15);g.basket.position.x=g.player.position.x;
 if(g.spawn<=0){g.spawn=rand(.28,.45);let x=[-9,-3,3,9][Math.floor(Math.random()*4)]+rand(-.6,.6),col=Math.floor(Math.random()*6);const bad=Math.random()<.15;g.items.push({x,y:5.6,z:3.5,vy:0,bad,col,mesh:candy(x,5.6,3.5,col,bad)})}
 for(let i=g.items.length-1;i>=0;i--){const q=g.items[i];q.vy+=11*dt;q.y-=q.vy*dt;q.mesh.position.y=q.y;q.mesh.rotation.z+=dt;
-if(q.y<1.5&&Math.abs(q.x-g.x)<1.25){if(q.bad){g.health--;showToast('IKKE KUFFERTEN!');beep(150);if(g.health<=0){lose('For mange kufferter ramte Dittes kurv.');return}}else{g.caught++;addScore(30);beep(620+q.col*45)}root.remove(q.mesh);g.items.splice(i,1);continue}
+if(q.y<1.5&&Math.abs(q.x-g.x)<(g.magnetTime>0?2.9:1.25)){if(q.bad){g.health--;showToast('IKKE KUFFERTEN!');beep(150);if(g.health<=0){lose('For mange kufferter ramte Dittes kurv.');return}}else{g.caught++;addScore(30);beep(620+q.col*45)}root.remove(q.mesh);g.items.splice(i,1);continue}
 if(q.y<-.5){root.remove(q.mesh);g.items.splice(i,1)}
 }
 $('#status').textContent='🍬 '+g.caught+' / '+g.goal+'\n'+Math.ceil(g.time)+'s · ❤ '+g.health;
 $('#progressFill').style.width=(g.caught/g.goal*100)+'%';
 if(g.caught>=g.goal){addScore(g.health*90+Math.ceil(g.time)*8);win()}else if(g.time<=0)lose('Tiden løb ud, før Ditte samlede nok chokolade.')}
+function activateCatch(){if(level!==2||mode!=='play')return;world.magnetTime=.9;showToast('DITTES SUPER-KURV!');beep(680,.14)}
 function renderPuzzle(){
 if(!world.puzzles)return;
 const p=world.puzzles[Math.min(world.floor,5)];
@@ -198,8 +199,8 @@ function resize(){const w=innerWidth,h=innerHeight,pr=Math.min(devicePixelRatio|
 window.addEventListener('resize',resize);
 const press=(name,value)=>{keys[name]=value;$('#'+name).classList.toggle('down',value)};
 for(const name of ['left','right']){let button=$('#'+name);button.addEventListener('pointerdown',e=>{e.preventDefault();press(name,true);button.setPointerCapture(e.pointerId)});for(const evt of ['pointerup','pointercancel','lostpointercapture','pointerleave'])button.addEventListener(evt,()=>press(name,false))}
-$('#action').addEventListener('click',()=>{if(mode!=='play')return;if(level===1)jump();if(level===3)solve();if(level===4)foodSpawn()});
-window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space','ArrowUp','Enter'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;if(e.repeat)return;if((e.code==='Space'||e.code==='ArrowUp')&&level===1)jump();if(level===3&&mode==='play'){if(['Digit1','Digit2','Digit3'].includes(e.code))toggleSwitch(Number(e.code.slice(-1))-1);if(e.code==='Enter')solve()}if(level===4&&mode==='play'&&e.code==='Enter')foodSpawn()});
+$('#action').addEventListener('click',()=>{if(mode!=='play')return;if(level===1)jump();if(level===2)activateCatch();if(level===3)solve();if(level===4)foodSpawn()});
+window.addEventListener('keydown',e=>{if(['ArrowLeft','ArrowRight','Space','ArrowUp','Enter'].includes(e.code))e.preventDefault();if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=true;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=true;if(e.repeat)return;if((e.code==='Space'||e.code==='ArrowUp')&&level===1)jump();if(e.code==='Space'&&level===2)activateCatch();if(level===3&&mode==='play'){if(['Digit1','Digit2','Digit3'].includes(e.code))toggleSwitch(Number(e.code.slice(-1))-1);if(e.code==='Enter')solve()}if(level===4&&mode==='play'&&e.code==='Enter')foodSpawn()});
 window.addEventListener('keyup',e=>{if(e.code==='ArrowLeft'||e.code==='KeyA')keys.left=false;if(e.code==='ArrowRight'||e.code==='KeyD')keys.right=false});
 $('#switches').addEventListener('click',e=>{const button=e.target.closest('[data-switch]');if(button)toggleSwitch(Number(button.dataset.switch))});
 $('#board').addEventListener('click',e=>{const button=e.target.closest('[data-cell]');if(button)foodSelect(Number(button.dataset.cell))});
@@ -210,4 +211,4 @@ canvas.addEventListener('pointermove',e=>{if(level===2&&mode==='play'&&e.buttons
 canvas.addEventListener('pointerdown',e=>{if(level===2&&mode==='play'){world.x=clamp((e.clientX/innerWidth-.5)*24,-11,11)}});
 function webglFail(){document.querySelector('#loading').innerHTML='<div style="text-align:center;padding:30px">3D-grafik kræver WebGL i browseren.<br>Prøv en opdateret browser, eller spil <a style="color:#ffdcaa" href="legacy-2d.html">2D-versionen</a>.</div>'}
 try{resize();openGame();$('#loading').classList.add('hidden');requestAnimationFrame(animate)}catch(e){console.error(e);webglFail()}
-window.__nycQA={startLevel,pass:win,lose,game:()=>world,mode:()=>mode,level:()=>level,solve,foodSpawn,foodSelect,deliver,renderPuzzle};
+window.__nycQA={startLevel,pass:win,lose,game:()=>world,mode:()=>mode,level:()=>level,solve,foodSpawn,foodSelect,deliver,renderPuzzle,activateCatch};
