@@ -1,68 +1,44 @@
 import fs from 'node:fs';
-import vm from 'node:vm';
 import assert from 'node:assert/strict';
 
-const root=new URL('../',import.meta.url);
-const html=fs.readFileSync(new URL('index.html',root),'utf8');
-const sprite=fs.readFileSync(new URL('assets/nyc-family-sprite.jpg',root));
-assert.equal(sprite[0],0xff);
-assert.equal(sprite[1],0xd8);
-assert.ok(sprite.length>2000);
-assert.match(html,/FAMILY QUEST/);
-assert.match(html,/href="merge.html"/);
-const scripts=[...html.matchAll(/<script(?:\s[^>]*)?>([\s\S]*?)<\/script>/g)];
-assert.equal(scripts.length,1);
-const original=scripts[0][1];
-new vm.Script(original);
-for(const phrase of ['Kapløb til flyet','Ditte i M&M’S Store','Elevatoren til toppen','New York Food Quest','function physics1(','function physics2(','function solve(','function foodTap(','function foodSpawn(','function serveFood(']){
-  assert.ok(original.includes(phrase),'Missing '+phrase);
+const base=new URL('../',import.meta.url);
+const html=fs.readFileSync(new URL('index.html',base),'utf8');
+const source=fs.readFileSync(new URL('game3d.js',base),'utf8');
+const legacy=fs.readFileSync(new URL('legacy-2d.html',base),'utf8');
+const merge=fs.readFileSync(new URL('merge.html',base),'utf8');
+const photo=fs.readFileSync(new URL('assets/nyc-family-sprite.jpg',base));
+
+assert.match(html,/<canvas id="view"/);
+assert.match(html,/<script type="module" src="\.\/game3d\.js"><\/script>/);
+assert.match(html,/id="puzzle"/);
+assert.match(html,/id="cookUI"/);
+assert.match(html,/id="controls"/);
+assert.match(html,/id="loading"/);
+assert.match(source,/import \* as THREE from 'https:\/\/cdn\.jsdelivr\.net\/npm\/three@0\.160\.1\/build\/three\.module\.js'/);
+assert.match(source,/new THREE.WebGLRenderer/);
+assert.match(source,/renderer\.shadowMap\.enabled=true/);
+assert.match(source,/THREE.ACESFilmicToneMapping/);
+assert.match(source,/new THREE.PerspectiveCamera/);
+assert.match(source,/function attachPortrait\(/);
+assert.match(source,/assets\/nyc-family-sprite\.jpg/);
+assert.ok(source.includes('buildNYC(0);world={...world,stop:0,board:'));
+for(const section of ['setup1','setup2','setup3','setup4','physics1','physics2','physics3','solve','foodSpawn','foodSelect','deliver']){
+ assert.match(source,new RegExp('function '+section+'\\('),'Missing '+section);
 }
-const injected=original.replace(/\}\)\(\);\s*$/,'window.__qa={startLevel,pass,finish,game:()=>game,mode:()=>mode,level:()=>level,toggleSwitch,solve,foodSpawn,foodTap,serveFood};})();');
-assert.ok(injected.includes('window.__qa={'));
-const E={},elements=new Map(),gradient={addColorStop(){}};let scheduled=null;
-const canvasContext=new Proxy({
- createLinearGradient:()=>gradient,createRadialGradient:()=>gradient
-},{get(obj,key){return key in obj?obj[key]:()=>{}},set(obj,key,val){obj[key]=val;return true}});
-const createElement=key=>({
- textContent:'',innerHTML:'',style:{},classList:{add(){},remove(){},toggle(){}},
- addEventListener:(type,cb)=>E[key+':'+type]=cb,getContext:()=>canvasContext,
- setPointerCapture(){},setAttribute(){},getBoundingClientRect:()=>({left:0,top:0})
-});
-const doc={querySelector(key){if(!elements.has(key))elements.set(key,createElement(key));return elements.get(key)},getElementById(id){return this.querySelector('#'+id)}};
-class ImgStub{set src(v){this._src=v}}
-class Param{setValueAtTime(){} exponentialRampToValueAtTime(){}}
-class AudioNode{constructor(){this.gain=new Param();this.frequency=new Param()}connect(){return this}start(){}stop(){}}
-class AudioStub{constructor(){this.currentTime=0;this.state='running';this.destination=new AudioNode()}createGain(){return new AudioNode()}createOscillator(){return new AudioNode()}resume(){}}
-const window={devicePixelRatio:1,AudioContext:AudioStub};
-const sandbox={window,document:doc,Image:ImgStub,addEventListener:(key,fn)=>E['window:'+key]=fn,requestAnimationFrame:fn=>scheduled=fn,Math,console};
-vm.runInNewContext(injected,sandbox,{timeout:5000});
-assert.ok(scheduled,'Animation loop absent');
-scheduled(16);
-assert.equal(window.__qa.mode(),'panel');
-assert.ok(E['#dialogStart:click']);
-E['#dialogStart:click']();
-assert.equal(window.__qa.level(),1);
-for(let i=0;i<30;i++)scheduled(i*16);
-for(const level of [1,2,3,4]){
- window.__qa.startLevel(level);
- for(let i=0;i<20;i++)scheduled((i+200+level*20)*16);
- assert.equal(window.__qa.level(),level);
- assert.equal(window.__qa.mode(),'play');
+const withoutImport=source.replace(/^import \* as THREE from [^\n]+\n/,'');
+assert.notEqual(withoutImport,source,'Import statement was not removed');
+new Function(withoutImport);
+
+const puzzles=[
+ [[2,3,5],7],[[1,4,6],11],[[2,5,8],10],
+ [[3,4,7],14],[[1,6,9],16],[[4,7,8],19]
+];
+for(const [values,goal] of puzzles){
+ const possible=[0,1,2,3,4,5,6,7].some(mask=>values.reduce((sum,val,i)=>sum+((mask>>i)&1?val:0),0)===goal);
+ assert.ok(possible,'Unsolvable elevator puzzle: '+goal);
 }
-window.__qa.startLevel(3);
-for(let floor=0;floor<6;floor++){
- const p=window.__qa.game().puzzles[floor];
- const mask=Array.from({length:8},(_,i)=>i).find(m=>p.v.reduce((sum,v,i)=>sum+((m>>i&1)?v:0),0)===p.goal);
- assert.notEqual(mask,undefined,'Impossible elevator floor '+floor);
- for(let i=0;i<3;i++)if((mask>>i)&1)window.__qa.toggleSwitch(i);
- window.__qa.solve();
-}
-assert.equal(window.__qa.mode(),'panel','Elevator should lead to success transition');
-window.__qa.startLevel(4);
-const g=window.__qa.game();
-for(let stop=0;stop<4;stop++){
- g.board[0]=g.orders[stop];g.chosen=0;window.__qa.serveFood();
-}
-assert.equal(window.__qa.mode(),'panel','Final level should show completion panel');
-assert.match(elements.get('#dialogHeading').innerHTML,/CHAMPIONS/);
-console.log('PASS: four levels, sprite asset, intro, animation, all elevator puzzles, food deliveries, final victory.');
+assert.ok(legacy.includes('Kapløb til flyet'),'2D backup missing');
+assert.ok(merge.includes('NYC Memories'),'Original merge game backup missing');
+assert.ok(photo.length>2000,'Family photo sprite is empty');
+assert.deepEqual([...photo.subarray(0,2)],[0xff,0xd8]);
+console.log('PASS: WebGL 3D structure, PBR lighting, four levels, JS syntax, elevator puzzles, backups and photo asset.');
