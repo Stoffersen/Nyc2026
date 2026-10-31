@@ -17,16 +17,22 @@ jobs:
       url: ${{ steps.deployment.outputs.page_url }}
     runs-on: ubuntu-latest
     steps:
-      - name: Checkout
+      - name: Checkout source
         uses: actions/checkout@v4
-      - name: Set up GitHub Pages
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+      - name: Validate game
+        run: node scripts/smoke-test.mjs
+      - name: Configure GitHub Pages
         uses: actions/configure-pages@v5
         with:
           enablement: true
-      - name: Upload site
+      - name: Upload static game
         uses: actions/upload-pages-artifact@v3
         with:
           path: .
-      - name: Publish
+      - name: Deploy website
         id: deployment
         uses: actions/deploy-pages@v4
